@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Kloppy is a goofy 1990s-style desktop helper for notes, reminders, scripts, and extremely suspicious cowboy commentary.">
-  <title>Kloppy 98 | Rootin' Tootin' Desktop Helper</title>
+  <meta name="description" content="Kloppy is cursed 1990s shareware with a cowboy paperclip-ish helper, fake payments, haunted reminders, and suspicious desktop commentary.">
+  <title>Kloppy 98 | Cursed Cowboy Shareware</title>
   <style>
     :root {
       color-scheme: dark;
@@ -22,6 +22,7 @@
       --brown: #7a3f16;
       --tan: #d89b4a;
       --red: #f0223c;
+      --acid: #39ff14;
       --font-system: Arial, Helvetica, sans-serif;
       --font-display: Impact, Haettenschweiler, "Arial Black", sans-serif;
       --font-mono: "Courier New", Courier, monospace;
@@ -198,7 +199,9 @@
     .hero-card,
     .window,
     .feature-card,
-    .counter-box {
+    .counter-box,
+    .curse-box,
+    .pay-panel {
       border: 4px ridge #fff;
       background: #00086b;
       box-shadow: 9px 9px 0 rgba(0, 0, 0, 0.8);
@@ -213,7 +216,7 @@
     }
 
     .hero-card::after {
-      content: "NEW!";
+      content: "CURSED!";
       position: absolute;
       right: -16px;
       top: -20px;
@@ -339,6 +342,31 @@
       background: var(--orange);
       color: #000;
       transform: rotate(-1deg);
+    }
+
+    .curse-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .curse-box {
+      padding: 10px;
+      background: #c0c0c0;
+      color: #000;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .curse-box strong {
+      display: block;
+      margin: -10px -10px 8px;
+      padding: 4px 6px;
+      background: #0000aa;
+      color: #fff;
     }
 
     .mascot-zone {
@@ -596,6 +624,18 @@
       text-align: center;
     }
 
+    .readymade {
+      margin-top: 12px;
+      padding: 9px;
+      border: 3px dashed var(--hot);
+      background: #fff;
+      color: #000;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 900;
+      transform: rotate(-1deg);
+    }
+
     .counter-digits {
       display: inline-flex;
       gap: 3px;
@@ -730,6 +770,64 @@
       align-items: stretch;
     }
 
+    .payment-zone {
+      display: grid;
+      grid-template-columns: minmax(0, 0.8fr) minmax(280px, 0.55fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .pay-panel {
+      padding: 18px;
+      background:
+        repeating-linear-gradient(45deg, #fff200 0 12px, #000 12px 24px);
+      color: #000;
+    }
+
+    .pay-card {
+      padding: 18px;
+      border: 4px inset #fff;
+      background: var(--cream);
+      box-shadow: 6px 6px 0 #000;
+      text-align: center;
+    }
+
+    .price {
+      display: block;
+      color: var(--hot);
+      font-family: var(--font-display);
+      font-size: clamp(3.4rem, 9vw, 6.6rem);
+      line-height: 0.85;
+      text-shadow: 4px 4px 0 #000;
+    }
+
+    .trial {
+      display: block;
+      margin: 8px 0 14px;
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .button.pay {
+      width: 100%;
+      min-height: 58px;
+      background: var(--red);
+      color: #fff;
+      font-size: 1rem;
+      text-shadow: 2px 2px 0 #000;
+    }
+
+    .pay-note {
+      min-height: 34px;
+      margin: 12px 0 0;
+      color: #001b8f;
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      font-weight: 900;
+    }
+
     .signup {
       display: grid;
       gap: 10px;
@@ -820,7 +918,9 @@
 
       .hero,
       .grid-2,
-      .updates {
+      .updates,
+      .payment-zone,
+      .curse-strip {
         grid-template-columns: 1fr;
       }
 
@@ -873,29 +973,35 @@
         <a href="#why">Why??</a>
         <a href="#features">Stuff</a>
         <a href="#computers">Computers</a>
+        <a href="#pay">Pay?</a>
         <a href="#updates">Join-ish</a>
       </nav>
     </div>
   </header>
 
   <div class="ticker" aria-hidden="true">
-    <span>*** HOWDY INTERNET TRAVELER *** KLOPPY HAS ENTERED YOUR DESKTOP BARN *** NO DOWNLOAD YET, JUST VIBES *** PLEASE ENJOY THIS EXTREMELY IMPORTANT WEB PAGE ***</span>
+    <span>*** WARNING: KLOPPY.EXE HAS DETECTED MODERN TASTE *** INSERT FLOPPY DISK INTO FEELINGS DRIVE *** $4.20 TRIAL OFFER IS NOT FINANCIAL ADVICE *** MARCHEL DUCHAMP MODE ENABLED ***</span>
   </div>
 
   <main id="main">
     <div class="page hero" id="top">
       <section class="hero-card" aria-labelledby="hero-title">
-        <p class="eyebrow">getkloppy.com / best viewed with snacks</p>
-        <h1 id="hero-title">Howdy, you appear to be computin'.</h1>
-        <p class="subheadline">Kloppy is a tiny desktop helper with Texas cowboy energy, suspiciously bendy manners, and a powerful urge to rename your files before lunch.</p>
+        <p class="eyebrow">getkloppy.com / cursed shareware corral</p>
+        <h1 id="hero-title">Howdy, your computer is haunted by productivity.</h1>
+        <p class="subheadline">Kloppy is a Texas cowboy paperclip-ish helper that crawled out of a bargain-bin CD-ROM, saluted a urinal, and asked to optimize your vibes.</p>
         <div class="hero-actions" role="group" aria-label="Landing page actions">
-          <a class="button primary" href="#updates">Join the fake waitlist</a>
+          <a class="button primary" href="#pay">Pay $4.20</a>
           <a class="button secondary" href="#concept">Meet the pardner</a>
         </div>
         <div class="hero-sticker-row" aria-label="Kloppy badges">
-          <span class="sticker">100% under construction</span>
+          <span class="sticker">Haunted by forms</span>
           <span class="sticker">Texas-sized hat</span>
-          <span class="sticker">Probably useful</span>
+          <span class="sticker">Duchamp-ish shovelware</span>
+        </div>
+        <div class="curse-strip" aria-label="Cursed software warnings">
+          <div class="curse-box"><strong>Error 420</strong> invoice became conceptual art</div>
+          <div class="curse-box"><strong>Warning</strong> cursor now smells like toner</div>
+          <div class="curse-box"><strong>Tip</strong> save as final_final_blessed</div>
         </div>
       </section>
 
@@ -922,17 +1028,18 @@
             </div>
             <div class="bubble">
               <span class="bubble-label">KLOPPY SAYS</span>
-              <p class="assistant-message" id="kloppy-message" aria-live="polite">It looks like you're trying to make a spreadsheet cry. Want me to lasso a reminder?</p>
-              <button class="tiny-button" type="button" id="message-button" aria-controls="kloppy-message" aria-label="Show another goofy Kloppy message">More yeehaw</button>
+              <p class="assistant-message" id="kloppy-message" aria-live="polite">It looks like you're trying to install a thought. Want me to staple a tiny hat to it?</p>
+              <button class="tiny-button" type="button" id="message-button" aria-controls="kloppy-message" aria-label="Show another cursed Kloppy message">More curse</button>
             </div>
           </div>
         </div>
 
         <div class="counter-box" aria-label="Fake visitor counter">
-          You are visitor number
+          You are corrupted visitor number
           <span class="counter-digits" aria-hidden="true">
             <span>0</span><span>0</span><span>0</span><span>4</span><span>2</span><span>7</span>
           </span>
+          <div class="readymade">MARCHEL DUCHAMP SAYS: this button is a readymade. please admire the billing.</div>
         </div>
       </aside>
     </div>
@@ -943,11 +1050,11 @@
       </div>
       <div class="grid-2">
         <div class="copy-panel">
-          <p><strong>Kloppy is a cowboy paperclip-ish desktop sidekick for modern chaos in retro boots.</strong></p>
-          <p>It wants to remember your notes, holler about reminders, watch folders like a tiny porch deputy, and pop up with advice nobody requested but everybody secretly needed.</p>
+          <p><strong>Kloppy is cursed desk livestock disguised as a cowboy paperclip-ish sidekick.</strong></p>
+          <p>It remembers notes, hollers about reminders, watches folders with courtroom intensity, and pops up like a tax document in a dream.</p>
         </div>
         <div class="copy-panel">
-          <p>Think utility software from a forgotten shareware CD, but with enough personality to ask why your Downloads folder contains seven files called "new-new-final-FINAL".</p>
+          <p>Think utility software from a forgotten shareware CD, if the CD was found in a gas station freezer and signed "MARCHEL DUCHAMP" in barbecue sauce.</p>
         </div>
       </div>
     </section>
@@ -958,10 +1065,10 @@
       </div>
       <div class="grid-2">
         <div class="copy-panel">
-          <p>Because software got smooth, tasteful, and emotionally distant. Kloppy prefers pixels you can hear, buttons that look like they owe you money, and helper text with spurs.</p>
+          <p>Because software got smooth, tasteful, and emotionally distant. Kloppy prefers pixels you can hear, buttons that look like they owe you money, and helper text with legal dust on it.</p>
         </div>
         <div class="copy-panel">
-          <p>Also because a computer should occasionally look you in the eye and say, "Partner, that file organization strategy belongs in a museum of mistakes."</p>
+          <p>Also because a computer should occasionally look you in the eye and say, "Partner, your file organization strategy is a readymade sculpture called Regret With Subfolders."</p>
         </div>
       </div>
     </section>
@@ -973,27 +1080,27 @@
       <div class="feature-grid">
         <article class="feature-card">
           <h3>Local-ish Notes</h3>
-          <p>Scribble thoughts before they escape through the nearest air vent.</p>
+          <p>Scribble thoughts before they become drawer lint with a login screen.</p>
         </article>
         <article class="feature-card">
           <h3>Reminder Rodeo</h3>
-          <p>Get nudged about meetings, errands, and that one thing you swore you would remember.</p>
+          <p>Get nudged by software wearing boots it absolutely cannot justify.</p>
         </article>
         <article class="feature-card">
           <h3>Folder Watchin'</h3>
-          <p>Kloppy can stare at folders so you do not have to stare at folders.</p>
+          <p>Kloppy stares into folders until the folders confess to tax fraud.</p>
         </article>
         <article class="feature-card">
           <h3>Script Spurs</h3>
-          <p>Kick off tiny automations with big "I meant to do that" energy.</p>
+          <p>Kick off tiny automations and call it choreography for beige machines.</p>
         </article>
         <article class="feature-card">
           <h3>Popup Yells</h3>
-          <p>Receive urgent-looking boxes full of useful nonsense and nonsense-adjacent usefulness.</p>
+          <p>Receive urgent boxes that feel like they were notarized by a printer jam.</p>
         </article>
         <article class="feature-card">
           <h3>Maybe AI Later</h3>
-          <p>Optional local smarts someday, after Kloppy learns not to eat the config file.</p>
+          <p>Optional local smarts later, once Kloppy stops calling RAM "desk soup".</p>
         </article>
       </div>
     </section>
@@ -1003,11 +1110,32 @@
         <h2 id="computers-title">For Weird Little Computers</h2>
       </div>
       <ul class="computer-list">
-        <li>Runs as a goofy desktop idea, not a giant cloud ceremony.</li>
+        <li>Runs as a cursed desktop idea, not a giant cloud seance.</li>
         <li>Pairs nicely with messy projects, tiny scripts, and overconfident file names.</li>
-        <li>Designed for people who miss software with visible corners.</li>
+        <li>Designed for people who miss software with corners sharp enough to cut a spreadsheet.</li>
         <li>No corporate helper was copied, downloaded, or stuffed into a cowboy hat.</li>
       </ul>
+    </section>
+
+    <section id="pay" class="page" aria-labelledby="pay-title">
+      <div class="section-header">
+        <h2 id="pay-title">Pay The Conceptual Toll</h2>
+      </div>
+      <div class="payment-zone">
+        <div class="copy-panel">
+          <p><strong>For only $4.20, unlock a 69 day trial of absolutely theatrical desktop anxiety.</strong></p>
+          <p>The button is fake. The price is real in spirit. The trial period was selected by a committee of broken mouse balls and one unpaid art historian.</p>
+          <p>MARCHEL DUCHAMP would probably rotate this checkout button 90 degrees and call it <strong>Fountain of Receipts</strong>.</p>
+        </div>
+        <div class="pay-panel">
+          <div class="pay-card">
+            <span class="price">$4.20</span>
+            <span class="trial">69 day trial</span>
+            <button class="button pay" type="button" id="pay-button" aria-describedby="pay-note">Pretend To Pay</button>
+            <p class="pay-note" id="pay-note" role="status">No payment processor is connected. The cash register is a JPEG in Kloppy's mind.</p>
+          </div>
+        </div>
+      </div>
     </section>
 
     <section id="updates" class="page" aria-labelledby="updates-title">
@@ -1042,20 +1170,26 @@
 
   <script>
     const messages = [
-      'It looks like you are trying to make a spreadsheet cry. Want me to lasso a reminder?',
-      'Partner, that desktop has more icons than a novelty belt buckle has rhinestones.',
-      'I found a file called final_FINAL_reallyfinal2. Should I alert the county?',
-      'Your calendar says quick sync. My hat says this meeting has side quests.',
-      'I can help with notes, reminders, scripts, and gentle yeehaw-grade judgment.'
+      'It looks like you are trying to install a thought. Want me to staple a tiny hat to it?',
+      'I rotated your todo list 90 degrees. It is art now. Please clap quietly.',
+      'Your Downloads folder is making eye contact with the printer again.',
+      'Partner, this meeting invite has the texture of a damp receipt.',
+      'I can help with notes, reminders, scripts, and forbidden cowboy invoice theater.'
     ];
 
     const messageEl = document.querySelector('#kloppy-message');
     const messageButton = document.querySelector('#message-button');
+    const payButton = document.querySelector('#pay-button');
+    const payNote = document.querySelector('#pay-note');
     let messageIndex = 0;
 
     messageButton.addEventListener('click', () => {
       messageIndex = (messageIndex + 1) % messages.length;
       messageEl.textContent = messages[messageIndex];
+    });
+
+    payButton.addEventListener('click', () => {
+      payNote.textContent = 'Kloppy rang up $4.20 for a 69 day trial, then framed the receipt and charged nobody.';
     });
 
     document.querySelector('#signup-form').addEventListener('submit', (event) => {
