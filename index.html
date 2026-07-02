@@ -631,6 +631,13 @@
       font-size: 0.76rem;
     }
 
+    .signup-disclaimer {
+      margin: 0;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.76rem;
+    }
+
     footer {
       padding: 28px 0 44px;
       color: var(--muted);
@@ -884,7 +891,7 @@
         <div>
           <p class="section-kicker">05 / signal</p>
           <h2>Get updates</h2>
-          <p>Join the waitlist for launch notes, prototype clips, and occasional warnings from a desktop creature with poor boundaries.</p>
+          <p>Join the waitlist for launch notes, prototype clips, and occasional warnings from a desktop creature with poor boundaries. It is not wired to a server yet, which is probably for the best.</p>
         </div>
         <form class="signup" id="signup-form">
           <label for="email">Email address</label>
@@ -892,6 +899,7 @@
             <input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required>
             <button class="button primary" type="submit">Join the waitlist</button>
           </div>
+          <p class="signup-disclaimer">Mock waitlist only. Nothing is sent, saved, or filed in a real cabinet.</p>
           <span class="signup-note" id="signup-note" aria-live="polite"></span>
         </form>
       </div>
@@ -922,7 +930,7 @@
 
     document.querySelector('#signup-form').addEventListener('submit', (event) => {
       event.preventDefault();
-      document.querySelector('#signup-note').textContent = 'You are on the imaginary waitlist. Kloppy is pacing.';
+      document.querySelector('#signup-note').textContent = 'Kloppy has pretend-filed your email in a folder called definitely_real_waitlist_final_v3. Nothing was sent or saved.';
       event.currentTarget.reset();
     });
   </script>
