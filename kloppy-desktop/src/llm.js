@@ -15,6 +15,10 @@ const path = require('path');
 const STARTUP_TIMEOUT_MS = 90 * 1000; // big models take a while to load
 const HEALTH_POLL_MS = 500;
 const REPLY_TIMEOUT_MS = 120 * 1000;
+const CONTEXT_TOKENS = 8192;     // bounded KV cache; llamafile's default (0) means "model max", which can be enormous
+const CACHE_REUSE_TOKENS = 256;  // min chunk the server may shift-reuse from the prompt cache
+const MAX_CONSECUTIVE_START_FAILURES = 3;
+const SERVER_LOG_MAX_BYTES = 512 * 1024;
 const MAX_PROMPT_LENGTH = 2000;
 const MAX_REPLY_TOKENS = 500;
 const MAX_CONTEXT_ITEMS = 8;
@@ -49,6 +53,10 @@ let port = null;
 let startPromise = null; // shared by concurrent asks so we spawn only once
 let askInFlight = false;
 let stopping = false;    // suppresses the exit handler during deliberate kills
+let launching = false;   // suppresses "crashed" while the startup ladder is still trying
+let argsProfile = null;  // launch profile that last produced a healthy server
+let profilePath = null;  // model path that profile was proven against
+let startFailures = 0;   // consecutive failed start() ladders; gates the crash-loop brake
 let pendingAction = null; // multi-turn local command, e.g. "Make a note" -> content next
 
 // Internal runtime state: not-configured | idle | starting | ready | error
@@ -66,6 +74,9 @@ function init(options) {
   broadcast = options.broadcast;
   pendingAction = null;
   askInFlight = false;
+  argsProfile = null;
+  profilePath = null;
+  startFailures = 0;
   refreshStatus();
 }
 
@@ -100,6 +111,7 @@ function setStatus(state, detail = '') {
 // Recompute the resting status (used at init and after settings changes,
 // so the renderer never shows "not configured" when a path exists).
 function refreshStatus() {
+  startFailures = 0; // a settings change is the user's "try again" signal
   if (!(child || startPromise)) {
     status = { state: getModelPath() ? 'idle' : 'not-configured', detail: '' };
   }
@@ -124,6 +136,67 @@ function findFreePort() {
 
 function baseUrl() {
   return `http://127.0.0.1:${port}`;
+}
+
+// Launch profiles, tried in order until one yields a healthy server:
+//   tuned      — performance flags, GPU offload if the machine has one
+//   tuned-cpu  — same flags but GPU disabled, for broken drivers / low VRAM
+//   minimal    — bare flags every llamafile release understands, so a
+//                user-supplied older binary still works
+const ARG_PROFILES = ['tuned', 'tuned-cpu', 'minimal'];
+
+function buildServerArgs(profile, serverPort) {
+  const args = ['--server', '--host', '127.0.0.1', '--port', String(serverPort)];
+  if (profile === 'minimal') return args;
+  args.push(
+    '--no-webui',                          // API only; keep the bundled web UI off localhost
+    '--parallel', '1',                     // one chat slot gets the whole context window
+    '--ctx-size', String(CONTEXT_TOKENS),
+    '--cache-reuse', String(CACHE_REUSE_TOKENS),
+  );
+  if (profile === 'tuned-cpu') args.push('--gpu', 'disable');
+  return args;
+}
+
+function serverLogPath() {
+  const runtimeDir = getLlamafileHomeDir ? getLlamafileHomeDir() : null;
+  return runtimeDir ? path.join(runtimeDir, 'server.log') : null;
+}
+
+// Keeps the server's output for post-mortems (truncated per launch, capped
+// in size) instead of throwing it away. Failing to log never blocks the
+// server, but the pipes must always be drained.
+function attachServerLog(proc, args) {
+  const drain = () => {
+    if (proc.stdout) proc.stdout.resume();
+    if (proc.stderr) proc.stderr.resume();
+  };
+  const logPath = serverLogPath();
+  if (!logPath) {
+    drain();
+    return;
+  }
+
+  let stream;
+  try {
+    fs.mkdirSync(path.dirname(logPath), { recursive: true });
+    stream = fs.createWriteStream(logPath, { flags: 'w' });
+  } catch {
+    drain();
+    return;
+  }
+
+  stream.on('error', drain);
+  let written = 0;
+  const write = (chunk) => {
+    if (written >= SERVER_LOG_MAX_BYTES) return;
+    written += chunk.length;
+    stream.write(chunk);
+  };
+  stream.write(`[kloppy] launch: ${args.join(' ')}\n`);
+  if (proc.stdout) proc.stdout.on('data', write);
+  if (proc.stderr) proc.stderr.on('data', write);
+  proc.once('close', () => stream.end());
 }
 
 function childEnv() {
@@ -590,6 +663,60 @@ async function waitForHealthy(proc) {
   return false;
 }
 
+// One launch attempt with one profile. Returns null on success, or a
+// machine-readable failure reason. Does not touch the public status so the
+// ladder in start() can keep showing "starting" between attempts.
+async function startWithProfile(modelPath, profile) {
+  try {
+    port = await findFreePort();
+  } catch {
+    return 'no-port';
+  }
+
+  const args = buildServerArgs(profile, port);
+  try {
+    child = spawn(modelPath, args, {
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,
+      env: childEnv(),
+    });
+  } catch {
+    child = null;
+    return 'spawn-failed';
+  }
+  runningPath = modelPath;
+  attachServerLog(child, args);
+
+  let spawnFailed = false;
+  const proc = child;
+  proc.once('error', () => {
+    if (proc === child) {
+      child = null;
+      spawnFailed = true;
+    }
+  });
+  proc.once('exit', () => {
+    if (proc !== child) return;
+    child = null;
+    // Deliberate stop() and failed launch attempts are not runtime crashes;
+    // anything else means it died under us (or the "llamafile" wasn't one).
+    if (!stopping && !launching) setStatus('error', 'crashed');
+  });
+
+  const healthy = await waitForHealthy(proc);
+  if (!healthy) {
+    if (proc === child) {
+      stopping = true;
+      proc.kill();
+      child = null;
+      stopping = false;
+      return 'no-response'; // process alive but never answered health checks
+    }
+    return spawnFailed ? 'spawn-failed' : 'crashed'; // exited while loading
+  }
+  return null;
+}
+
 async function start() {
   const modelPath = getModelPath();
   if (!modelPath) {
@@ -601,58 +728,43 @@ async function start() {
     return false;
   }
 
+  if (modelPath !== profilePath) {
+    // Different model file: forget what we learned about the previous one.
+    profilePath = modelPath;
+    argsProfile = null;
+    startFailures = 0;
+  }
+  if (startFailures >= MAX_CONSECUTIVE_START_FAILURES) {
+    // Crash-loop brake: stop respawning a server that keeps dying. Changing
+    // any setting (refreshStatus) arms it again.
+    setStatus('error', 'crash-loop');
+    return false;
+  }
+
   setStatus('starting');
+  launching = true;
+  let reason = 'no-response';
   try {
-    port = await findFreePort();
-  } catch {
-    setStatus('error', 'no-port');
-    return false;
+    // A proven profile is retried alone; otherwise walk the ladder.
+    const profiles = argsProfile ? [argsProfile] : ARG_PROFILES;
+    for (const profile of profiles) {
+      reason = await startWithProfile(modelPath, profile);
+      if (reason === null) {
+        argsProfile = profile;
+        startFailures = 0;
+        setStatus('ready');
+        return true;
+      }
+      if (reason === 'no-port') break; // not the flags' fault; retrying won't help
+    }
+  } finally {
+    launching = false;
   }
 
-  const args = ['--server', '--host', '127.0.0.1', '--port', String(port)];
-  try {
-    child = spawn(modelPath, args, {
-      stdio: 'ignore',
-      windowsHide: true,
-      env: childEnv(),
-    });
-  } catch {
-    child = null;
-    setStatus('error', 'spawn-failed');
-    return false;
-  }
-  runningPath = modelPath;
-
-  const proc = child;
-  proc.once('error', () => {
-    if (proc === child) {
-      child = null;
-      setStatus('error', 'spawn-failed');
-    }
-  });
-  proc.once('exit', () => {
-    if (proc === child) {
-      child = null;
-      // Deliberate stop() is not an error; anything else means it crashed
-      // (or the "llamafile" wasn't one).
-      if (!stopping) setStatus('error', 'crashed');
-    }
-  });
-
-  const healthy = await waitForHealthy(proc);
-  if (!healthy) {
-    if (proc === child) {
-      stopping = true;
-      proc.kill();
-      child = null;
-      stopping = false;
-      setStatus('error', 'no-response');
-    }
-    return false;
-  }
-
-  setStatus('ready');
-  return true;
+  startFailures += 1;
+  setStatus('error',
+    startFailures >= MAX_CONSECUTIVE_START_FAILURES ? 'crash-loop' : reason);
+  return false;
 }
 
 // Ensures a healthy server for the currently-configured model path.
@@ -759,4 +871,4 @@ function stop() {
   });
 }
 
-module.exports = { init, getStatus, ask, stop, refreshStatus };
+module.exports = { init, getStatus, ask, stop, refreshStatus, buildServerArgs };
