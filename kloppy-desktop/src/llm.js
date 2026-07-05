@@ -16,6 +16,7 @@ const STARTUP_TIMEOUT_MS = 90 * 1000; // big models take a while to load
 const HEALTH_POLL_MS = 500;
 const REPLY_TIMEOUT_MS = 180 * 1000; // 500 tokens on a slow everyday CPU can take minutes
 const HEALTH_CHECK_TIMEOUT_MS = 3 * 1000;
+const IDLE_STOP_MS = 20 * 60 * 1000; // reclaim the model's RAM when chat goes quiet
 const CONTEXT_TOKENS = 8192;     // bounded KV cache; llamafile's default (0) means "model max", which can be enormous
 const CACHE_REUSE_TOKENS = 256;  // min chunk the server may shift-reuse from the prompt cache
 const MAX_CONSECUTIVE_START_FAILURES = 3;
@@ -58,6 +59,7 @@ let launching = false;   // suppresses "crashed" while the startup ladder is sti
 let argsProfile = null;  // launch profile that last produced a healthy server
 let profilePath = null;  // model path that profile was proven against
 let startFailures = 0;   // consecutive failed start() ladders; gates the crash-loop brake
+let idleTimer = null;    // pending idle shutdown, if any
 let pendingAction = null; // multi-turn local command, e.g. "Make a note" -> content next
 
 // Internal runtime state: not-configured | idle | starting | ready | error
@@ -789,6 +791,28 @@ async function ensureReady() {
   return startPromise;
 }
 
+function clearIdleStop() {
+  if (idleTimer) {
+    clearTimeout(idleTimer);
+    idleTimer = null;
+  }
+}
+
+// A model server holds the whole model in memory (roughly its file size).
+// After a quiet spell it is shut down; the next ask relaunches it
+// transparently, trading a few seconds of load time for gigabytes of RAM
+// the rest of the desktop can use.
+function scheduleIdleStop() {
+  clearIdleStop();
+  if (!child) return;
+  idleTimer = setTimeout(() => {
+    idleTimer = null;
+    if (askInFlight || !child) return;
+    stop().then(() => refreshStatus());
+  }, IDLE_STOP_MS);
+  if (typeof idleTimer.unref === 'function') idleTimer.unref();
+}
+
 async function serverAlive() {
   try {
     const res = await fetch(`${baseUrl()}/health`, {
@@ -894,11 +918,14 @@ async function ask(prompt, history = []) {
     return { ok: false, error: 'request-failed' };
   } finally {
     askInFlight = false;
+    scheduleIdleStop();
   }
 }
 
-// Kills the server. Called on app quit and when the model path changes.
+// Kills the server. Called on app quit, when the model path changes, and
+// by the idle-stop timer.
 function stop() {
+  clearIdleStop();
   return new Promise((resolve) => {
     if (!child) {
       resolve();
