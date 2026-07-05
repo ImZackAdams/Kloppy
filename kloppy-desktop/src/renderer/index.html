@@ -6,14 +6,73 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <main class="panel">
-    <h1>Kloppy <span class="version">v0.0.1</span></h1>
+  <div class="app-window">
 
-    <p id="message">It looks like you're making questionable decisions.</p>
+    <!-- Fake retro title bar. Decorative only — the OS owns the real one. -->
+    <header class="titlebar">
+      <span class="titlebar-icon" aria-hidden="true"></span>
+      <span class="titlebar-text">KLOPPY.EXE — Desktop Assistant</span>
+      <span class="titlebar-buttons" aria-hidden="true">
+        <span class="titlebar-btn">_</span>
+        <span class="titlebar-btn">&#9633;</span>
+        <span class="titlebar-btn">&times;</span>
+      </span>
+    </header>
 
-    <button id="ask-kloppy" type="button">Ask Kloppy</button>
-  </main>
+    <div class="badge-row">
+      <span class="badge">v0.0.1</span>
+      <span class="badge badge-green">FREEWARE</span>
+      <span class="badge badge-yellow">100% GREMLIN</span>
+      <span class="badge">0 BUGS*</span>
+    </div>
 
+    <main class="content">
+
+      <!-- Kloppy himself: a small goblin CRT monitor, built from CSS only -->
+      <section class="kloppy-zone">
+        <div class="kloppy" aria-hidden="true">
+          <div class="antenna antenna-left"></div>
+          <div class="antenna antenna-right"></div>
+          <div class="head">
+            <div class="screen">
+              <div class="eye eye-left"></div>
+              <div class="eye eye-right"></div>
+              <div class="mouth"></div>
+            </div>
+          </div>
+          <div class="leg leg-left"></div>
+          <div class="leg leg-right"></div>
+        </div>
+        <div class="bubble">
+          <p id="bubble-text">It looks like you're making questionable decisions.</p>
+        </div>
+      </section>
+
+      <!-- Main panel: buttons below swap what's shown here -->
+      <section class="panel">
+        <h2 class="panel-title" id="panel-title">WELCOME.TXT</h2>
+        <div class="panel-body" id="panel-body">
+          <p>Kloppy is a desktop gremlin. He lives in this window now.</p>
+          <p>Press a button below. Kloppy is waiting. Kloppy is patient.*</p>
+          <p class="fine-print">* Kloppy is not patient.</p>
+        </div>
+      </section>
+
+    </main>
+
+    <nav class="button-row">
+      <button id="btn-say" type="button">Say something</button>
+      <button id="btn-notes" type="button">Open notes</button>
+      <button id="btn-reminder" type="button">Reminder</button>
+      <button id="btn-settings" type="button">Settings</button>
+    </nav>
+
+    <footer class="statusbar">
+      <span class="status-cell status-main" id="status-text">Kloppy is idle, suspiciously.</span>
+      <span class="status-cell">GRM 100%</span>
+    </footer>
+
+  </div>
   <script src="app.js"></script>
 </body>
 </html>

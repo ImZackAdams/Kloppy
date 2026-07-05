@@ -1,36 +1,346 @@
-/* Kloppy v0.0.1 — humble beginnings. */
+/* Kloppy — retro utility-window styling.
+   The look: chunky gray chassis, beveled edges, hard shadows,
+   like software you downloaded in 1999 from a site with a hit counter. */
+
+:root {
+  --desktop: #1f7a6d;          /* teal "desktop wallpaper" behind the window */
+  --chassis: #c6c6c6;          /* main gray plastic */
+  --bevel-light: #ffffff;      /* top/left edge highlight */
+  --bevel-dark: #6e6e6e;       /* bottom/right edge shadow */
+  --ink: #1a1a1a;
+  --title-grad-a: #1b1b6f;     /* fake title bar gradient */
+  --title-grad-b: #7a3fa0;
+  --crt: #0c3a12;              /* Kloppy's screen-face */
+  --crt-glow: #b6f7b0;         /* eyes, mouth, phosphor green */
+  --paper: #fffdf2;            /* panel + speech bubble background */
+}
+
+/* Raised and sunken bevels — the two load-bearing walls of 90s UI */
+.app-window, .titlebar-btn, button {
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-dark) var(--bevel-dark) var(--bevel-light);
+}
+.screen, .panel, .status-cell {
+  border: 2px solid;
+  border-color: var(--bevel-dark) var(--bevel-light) var(--bevel-light) var(--bevel-dark);
+}
+
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  font-family: monospace;
-  background: #2a2a3a;
-  color: #e8e8e8;
+  height: 100vh;
+  display: flex;
+  font-family: Tahoma, Verdana, system-ui, sans-serif;
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--desktop);
 }
 
-.panel {
-  max-width: 380px;
-  padding: 24px;
+/* ---- The fake application window ---- */
+
+.app-window {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 680px;
+  margin: 14px auto;
+  background: var(--chassis);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.35);
+}
+
+.titlebar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  background: linear-gradient(90deg, var(--title-grad-a), var(--title-grad-b));
+  color: #fff;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  user-select: none;
+}
+
+.titlebar-icon {
+  width: 14px;
+  height: 14px;
+  background: var(--crt-glow);
+  border: 2px solid var(--crt);
+}
+
+.titlebar-text {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.titlebar-btn {
+  display: inline-block;
+  width: 18px;
   text-align: center;
-  background: #3a3a4e;
-  border: 2px solid #6a6a8a;
+  background: var(--chassis);
+  color: var(--ink);
+  font-size: 11px;
+  line-height: 14px;
+}
+
+.badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 8px 0;
+}
+
+.badge {
+  font-family: "Courier New", monospace;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 1px 6px;
+  background: #e8e8e8;
+  border: 1px solid var(--ink);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.25);
+}
+.badge-green  { background: #b9f0b9; }
+.badge-yellow { background: #fff3a6; }
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 10px 4px;
+}
+
+/* ---- Kloppy the gremlin: a tiny CRT monitor with legs ---- */
+
+.kloppy-zone {
+  display: flex;
+  flex-wrap: wrap;          /* bubble drops below Kloppy in narrow windows */
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.kloppy {
+  position: relative;
+  width: 110px;
+  height: 122px;
+  flex-shrink: 0;
+  animation: bob 3s ease-in-out infinite;
+}
+
+.head {
+  position: absolute;
+  top: 16px;
+  left: 5px;
+  width: 100px;
+  height: 82px;
+  padding: 7px;
+  background: var(--chassis);
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-dark) var(--bevel-dark) var(--bevel-light);
   border-radius: 6px;
 }
 
-.version {
-  font-size: 0.6em;
-  color: #9a9ac0;
+.screen {
+  position: relative;
+  height: 100%;
+  background: var(--crt);
+  border-radius: 4px;
+  overflow: hidden;
 }
 
-#message {
-  min-height: 3em;
+.eye {
+  position: absolute;
+  top: 12px;
+  width: 14px;
+  height: 18px;
+  background: var(--crt-glow);
+  border-radius: 50%;
+  animation: blink 4s infinite;
+}
+.eye-left  { left: 17px; }
+.eye-right { right: 17px; animation-delay: 0.15s; }
+
+.eye::after {          /* pupil */
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 7px;
+  width: 6px;
+  height: 7px;
+  background: var(--crt);
+  border-radius: 50%;
+}
+
+.mouth {
+  position: absolute;
+  bottom: 7px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px;
+  height: 11px;
+  background: var(--crt-glow);
+  /* zigzag bottom edge = goblin teeth */
+  clip-path: polygon(
+    0 0, 100% 0, 100% 45%, 87% 100%, 75% 45%, 62% 100%,
+    50% 45%, 38% 100%, 25% 45%, 13% 100%, 0 45%
+  );
+}
+
+.antenna {
+  position: absolute;
+  top: 2px;
+  width: 4px;
+  height: 18px;
+  background: var(--bevel-dark);
+}
+.antenna-left  { left: 30px; transform: rotate(-18deg); }
+.antenna-right { right: 30px; transform: rotate(18deg); }
+
+.antenna::after {      /* glowing bobble on top */
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: -3px;
+  width: 10px;
+  height: 10px;
+  background: var(--crt-glow);
+  border: 1px solid var(--crt);
+  border-radius: 50%;
+}
+
+.leg {
+  position: absolute;
+  bottom: 8px;
+  width: 9px;
+  height: 16px;
+  background: var(--bevel-dark);
+}
+.leg-left  { left: 32px; }
+.leg-right { right: 32px; }
+
+.leg::after {          /* little foot */
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  left: -4px;
+  width: 18px;
+  height: 6px;
+  background: var(--ink);
+  border-radius: 3px;
+}
+
+/* ---- Speech bubble ---- */
+
+.bubble {
+  position: relative;
+  flex: 1;
+  min-width: 170px;
+  padding: 10px 12px;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+.bubble::before {      /* tail pointing at Kloppy */
+  content: "";
+  position: absolute;
+  left: -12px;
+  top: 24px;
+  border: 6px solid transparent;
+  border-right-color: var(--ink);
+}
+
+.bubble p { margin: 0; }
+
+/* ---- Main panel (the "document" area) ---- */
+
+.panel {
+  background: var(--paper);
+  padding: 0 0 8px;
+}
+
+.panel-title {
+  margin: 0 0 8px;
+  padding: 3px 8px;
+  background: var(--title-grad-a);
+  color: #fff;
+  font-family: "Courier New", monospace;
+  font-size: 12px;
+}
+
+.panel-body { padding: 0 10px; }
+.panel-body p { margin: 0 0 8px; }
+
+.fine-print {
+  font-size: 11px;
+  color: #666;
+}
+
+.fake-option {
+  display: block;
+  margin-bottom: 6px;
+  color: #555;
+}
+
+/* ---- Buttons ---- */
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px;
 }
 
 button {
+  flex: 1;
+  min-width: 120px;
+  padding: 6px 10px;
   font-family: inherit;
-  font-size: 1em;
-  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--ink);
+  background: var(--chassis);
   cursor: pointer;
+}
+
+button:active {
+  border-color: var(--bevel-dark) var(--bevel-light) var(--bevel-light) var(--bevel-dark);
+  transform: translate(1px, 1px);
+}
+
+/* ---- Status bar ---- */
+
+.statusbar {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+}
+
+.status-cell {
+  padding: 2px 8px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.status-main {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- Animations ---- */
+
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+
+@keyframes blink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  94%           { transform: scaleY(0.15); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kloppy, .eye { animation: none; }
 }

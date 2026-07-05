@@ -6,9 +6,12 @@ const path = require('path');
 
 function createWindow() {
   const win = new BrowserWindow({
-    width: 520,
-    height: 640,
+    width: 640,
+    height: 720,
+    minWidth: 360,
+    minHeight: 420,
     title: 'Kloppy',
+    backgroundColor: '#1f7a6d',
     webPreferences: {
       // Safe defaults: the renderer has no direct access to Node.
       contextIsolation: true,
