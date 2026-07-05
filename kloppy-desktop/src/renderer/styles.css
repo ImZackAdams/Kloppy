@@ -352,6 +352,87 @@ body {
   font-style: italic;
 }
 
+/* ---- Reminders ---- */
+
+.reminder-editor {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 10px;
+}
+
+.reminder-editor input {
+  padding: 6px;
+  font-family: "Courier New", monospace;
+  font-size: 13px;
+  background: #fff;
+  border: 2px solid;
+  border-color: var(--bevel-dark) var(--bevel-light) var(--bevel-light) var(--bevel-dark);
+}
+
+#reminder-text { flex: 1 1 160px; }
+#reminder-when { flex: 0 1 auto; }
+.reminder-editor button { flex: 0 0 auto; min-width: 110px; }
+
+.list-heading {
+  margin: 12px 10px 4px;
+  font-family: "Courier New", monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #444;
+}
+
+.note.done { opacity: 0.65; }
+.note.done .note-text { text-decoration: line-through; }
+
+/* ---- Kloppy alert popup ---- */
+
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.popup-overlay.hidden { display: none; }
+
+.popup {
+  width: min(340px, 90vw);
+  background: var(--chassis);
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-dark) var(--bevel-dark) var(--bevel-light);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.45);
+}
+
+.popup-titlebar {
+  padding: 3px 8px;
+  background: linear-gradient(90deg, #7a1b1b, #b04a1f);
+  color: #fff;
+  font-weight: bold;
+  font-family: "Courier New", monospace;
+}
+
+.popup-body { padding: 10px 12px; }
+.popup-body p { margin: 0 0 8px; }
+
+.popup-text {
+  font-weight: bold;
+  word-break: break-word;
+}
+
+.popup-footer {
+  display: flex;
+  justify-content: center;
+  padding: 0 12px 10px;
+}
+
+.popup-footer button {
+  flex: 0 0 auto;
+  min-width: 90px;
+}
+
 /* ---- Buttons ---- */
 
 .button-row {

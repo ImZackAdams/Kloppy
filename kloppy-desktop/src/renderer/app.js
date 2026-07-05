@@ -24,13 +24,6 @@ const panels = {
       <p>Press a button below. Kloppy is waiting. Kloppy is patient.*</p>
       <p class="fine-print">* Kloppy is not patient.</p>`,
   },
-  reminder: {
-    title: 'REMIND.SYS',
-    body: `
-      <p>Reminder scheduled for: <b>eventually</b>.</p>
-      <p>Kloppy will forget this immediately.</p>
-      <p class="fine-print">Real reminders are coming in a future version.</p>`,
-  },
   settings: {
     title: 'SETTINGS.INI',
     body: `
@@ -44,7 +37,6 @@ const panels = {
 const statusLines = {
   idle: 'Kloppy is idle, suspiciously.',
   say: 'Kloppy is saying words. Nobody asked.',
-  reminder: 'Kloppy will remind you at some point. Probably.',
   settings: 'Kloppy resents being configured.',
   noteSaved: 'Note swallowed whole. It is safe now. Probably.',
   noteDeleted: 'Note shredded. Kloppy ate the shreds.',
@@ -160,6 +152,163 @@ async function saveNote() {
   await refreshNotes();
 }
 
+// ---- Reminders panel ----
+
+async function openReminders() {
+  panelTitle.textContent = 'REMIND.SYS';
+  panelBody.innerHTML = `
+    <div class="reminder-editor">
+      <input id="reminder-text" type="text"
+        placeholder="What should Kloppy yell about?">
+      <input id="reminder-when" type="datetime-local" step="1">
+      <button id="reminder-save" type="button">Set reminder</button>
+    </div>
+    <p class="fine-print">Kloppy checks the clock every 30 seconds. He is extremely dedicated.</p>
+    <h3 class="list-heading">UPCOMING</h3>
+    <ul class="note-list" id="reminder-upcoming"></ul>
+    <h3 class="list-heading">ALREADY YELLED ABOUT</h3>
+    <ul class="note-list" id="reminder-done"></ul>`;
+
+  document.getElementById('reminder-save').addEventListener('click', saveReminder);
+  await refreshReminders();
+}
+
+function reminderItem(reminder) {
+  // Built with createElement + textContent so reminder text is never
+  // interpreted as HTML.
+  const li = document.createElement('li');
+  li.className = reminder.completed ? 'note done' : 'note';
+
+  const text = document.createElement('p');
+  text.className = 'note-text';
+  text.textContent = reminder.text;
+
+  const meta = document.createElement('div');
+  meta.className = 'note-meta';
+
+  const due = document.createElement('span');
+  due.textContent = 'due ' + new Date(reminder.dueAt).toLocaleString();
+
+  const del = document.createElement('button');
+  del.type = 'button';
+  del.className = 'note-delete';
+  del.textContent = 'Forget';
+  del.addEventListener('click', async () => {
+    await window.kloppy.reminders.remove(reminder.id);
+    say('Forgotten. Kloppy has already moved on emotionally.');
+    setStatus('Reminder defused. Kloppy stands down.');
+    await refreshReminders();
+  });
+
+  meta.append(due, del);
+  li.append(text, meta);
+  return li;
+}
+
+function emptyItem(listEl, message) {
+  const li = document.createElement('li');
+  li.className = 'note note-empty';
+  li.textContent = message;
+  listEl.appendChild(li);
+}
+
+async function refreshReminders() {
+  const upcomingEl = document.getElementById('reminder-upcoming');
+  const doneEl = document.getElementById('reminder-done');
+  if (!upcomingEl) return; // reminder panel is not on screen right now
+
+  const result = await window.kloppy.reminders.list();
+  const byDue = (a, b) => new Date(a.dueAt) - new Date(b.dueAt);
+
+  upcomingEl.textContent = '';
+  doneEl.textContent = '';
+  for (const r of result.reminders.filter((r) => !r.completed).sort(byDue)) {
+    upcomingEl.appendChild(reminderItem(r));
+  }
+  for (const r of result.reminders.filter((r) => r.completed).sort(byDue)) {
+    doneEl.appendChild(reminderItem(r));
+  }
+  if (upcomingEl.children.length === 0) {
+    emptyItem(upcomingEl, 'Nothing scheduled. Kloppy relaxes. Slightly.');
+  }
+  if (doneEl.children.length === 0) {
+    emptyItem(doneEl, 'Nothing yelled about yet.');
+  }
+}
+
+async function saveReminder() {
+  const textInput = document.getElementById('reminder-text');
+  const whenInput = document.getElementById('reminder-when');
+  const result = await window.kloppy.reminders.add(textInput.value, whenInput.value);
+
+  if (!result.ok) {
+    if (result.error === 'empty') {
+      say('Remind you of... nothing? Done. Wait. No.');
+      setStatus('Kloppy cannot yell about nothing.');
+    } else if (result.error === 'too-long') {
+      say(`Keep it under ${result.max} characters. Kloppy yells in short bursts.`);
+      setStatus('Reminder too long. Kloppy has limited lungs.');
+    } else if (result.error === 'bad-date') {
+      say('That is not a time. Kloppy is a gremlin, but he respects clocks.');
+      setStatus('Reminder needs a valid date and time.');
+    }
+    return;
+  }
+
+  textInput.value = '';
+  whenInput.value = '';
+  say('Reminder armed. I am watching the clock. Menacingly.');
+  setStatus('Reminder armed. Kloppy never blinks. Except constantly.');
+  await refreshReminders();
+}
+
+// ---- Due-reminder checking + the alert popup ----
+
+const REMINDER_CHECK_MS = 30 * 1000;
+const popupQueue = [];
+const popupOverlay = document.getElementById('popup-overlay');
+const popupText = document.getElementById('popup-text');
+
+// Popups show one at a time; extra due reminders wait their turn.
+function queuePopup(text) {
+  popupQueue.push(text);
+  if (popupOverlay.classList.contains('hidden')) showNextPopup();
+}
+
+function showNextPopup() {
+  const next = popupQueue.shift();
+  if (next === undefined) {
+    popupOverlay.classList.add('hidden');
+    return;
+  }
+  popupText.textContent = next;
+  popupOverlay.classList.remove('hidden');
+}
+
+document.getElementById('popup-ok').addEventListener('click', showNextPopup);
+
+async function checkDueReminders() {
+  const result = await window.kloppy.reminders.list();
+  const now = new Date();
+  const due = result.reminders.filter(
+    (r) => !r.completed && new Date(r.dueAt) <= now
+  );
+
+  for (const r of due) {
+    await window.kloppy.reminders.complete(r.id);
+    queuePopup(r.text);
+  }
+
+  if (due.length > 0) {
+    say('DING DING DING. I did my one job.');
+    setStatus('Kloppy yelled about a reminder. Duty fulfilled.');
+    await refreshReminders(); // no-op unless the reminder panel is open
+  }
+}
+
+setInterval(checkDueReminders, REMINDER_CHECK_MS);
+checkDueReminders(); // catch anything that came due while Kloppy was asleep
+
 // ---- Wire up the buttons ----
 
 let quipIndex = 0;
@@ -176,9 +325,8 @@ document.getElementById('btn-notes').addEventListener('click', () => {
 });
 
 document.getElementById('btn-reminder').addEventListener('click', () => {
-  showPanel('reminder');
-  say("I'll remember this. I remember everything.");
-  setStatus(statusLines.reminder);
+  say("Tell me what to yell about, and when.");
+  openReminders();
 });
 
 document.getElementById('btn-settings').addEventListener('click', () => {

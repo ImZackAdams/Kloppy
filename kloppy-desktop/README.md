@@ -24,28 +24,37 @@ src/
   main.js       # Electron main process: window, lifecycle, IPC endpoints
   preload.js    # Safe bridge between main and renderer
   notes.js      # Note storage (main process only)
+  reminders.js  # Reminder storage (main process only)
   renderer/
     index.html  # The Kloppy window
     styles.css  # Retro styling
     app.js      # UI logic
 ```
 
-## Notes storage
+## Local storage
 
-Notes are saved to `notes.json` inside Electron's per-user app data
-directory (`app.getPath('userData')`):
+Notes and reminders are saved as JSON inside Electron's per-user app
+data directory (`app.getPath('userData')`):
 
-- Linux: `~/.config/kloppy-desktop/notes.json`
-- macOS: `~/Library/Application Support/kloppy-desktop/notes.json`
-- Windows: `%APPDATA%/kloppy-desktop/notes.json`
+- Linux: `~/.config/kloppy-desktop/`
+- macOS: `~/Library/Application Support/kloppy-desktop/`
+- Windows: `%APPDATA%/kloppy-desktop/`
 
-Each note is `{ id, text, createdAt }`, newest first. Everything stays
-on your machine — Kloppy never phones home.
+`notes.json` holds `{ id, text, createdAt }` entries (newest first).
+`reminders.json` holds `{ id, text, dueAt, completed, createdAt }`.
+Everything stays on your machine — Kloppy never phones home.
 
 The renderer can't touch the filesystem. It calls `window.kloppy.notes`
-(exposed by the preload script), which invokes `notes:list` / `notes:add` /
-`notes:delete` over IPC; the main process validates input (no empty notes,
-500-character limit) and does the file I/O.
+and `window.kloppy.reminders` (exposed by the preload script), which go
+over IPC to the main process; the main process validates input (no empty
+text, length limits, real dates) and does the file I/O.
+
+## Reminders
+
+While the app is open, the renderer checks every 30 seconds for due
+reminders. When one comes due, Kloppy shows a retro in-app alert popup,
+marks the reminder completed, and files it under "already yelled about".
+Reminders that came due while the app was closed fire on next launch.
 
 ## Security defaults
 

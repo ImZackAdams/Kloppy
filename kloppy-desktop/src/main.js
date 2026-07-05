@@ -4,6 +4,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const notes = require('./notes');
+const reminders = require('./reminders');
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -25,13 +26,19 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  // Note storage lives next to the app's other user data.
+  // Storage lives next to the app's other user data.
   notes.init(app.getPath('userData'));
+  reminders.init(app.getPath('userData'));
 
   // IPC endpoints the preload bridge is allowed to call.
   ipcMain.handle('notes:list', () => notes.list());
   ipcMain.handle('notes:add', (_event, text) => notes.add(text));
   ipcMain.handle('notes:delete', (_event, id) => notes.remove(id));
+
+  ipcMain.handle('reminders:list', () => reminders.list());
+  ipcMain.handle('reminders:add', (_event, text, dueAt) => reminders.add(text, dueAt));
+  ipcMain.handle('reminders:complete', (_event, id) => reminders.complete(id));
+  ipcMain.handle('reminders:delete', (_event, id) => reminders.remove(id));
 
   createWindow();
 

@@ -11,4 +11,10 @@ contextBridge.exposeInMainWorld('kloppy', {
     add: (text) => ipcRenderer.invoke('notes:add', text),
     remove: (id) => ipcRenderer.invoke('notes:delete', id),
   },
+  reminders: {
+    list: () => ipcRenderer.invoke('reminders:list'),
+    add: (text, dueAt) => ipcRenderer.invoke('reminders:add', text, dueAt),
+    complete: (id) => ipcRenderer.invoke('reminders:complete', id),
+    remove: (id) => ipcRenderer.invoke('reminders:delete', id),
+  },
 });

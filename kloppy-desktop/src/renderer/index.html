@@ -73,6 +73,21 @@
     </footer>
 
   </div>
+
+  <!-- Retro alert popup for due reminders (hidden until Kloppy has news) -->
+  <div class="popup-overlay hidden" id="popup-overlay">
+    <div class="popup" role="alertdialog" aria-labelledby="popup-title">
+      <div class="popup-titlebar" id="popup-title">!! KLOPPY ALERT !!</div>
+      <div class="popup-body">
+        <p>DING. A reminder is due:</p>
+        <p class="popup-text" id="popup-text"></p>
+      </div>
+      <div class="popup-footer">
+        <button id="popup-ok" type="button">OK, OK</button>
+      </div>
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>
