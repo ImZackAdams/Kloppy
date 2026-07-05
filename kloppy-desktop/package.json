@@ -4,7 +4,7 @@
   "description": "Kloppy: a retro desktop gremlin assistant. He means well. Probably.",
   "main": "src/main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "env -u ELECTRON_RUN_AS_NODE electron ."
   },
   "license": "MIT",
   "devDependencies": {

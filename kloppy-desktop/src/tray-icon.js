@@ -1,41 +1,62 @@
-// Kloppy's tray icon, drawn entirely in code — no image assets.
-// A 16x16 pixel-art version of the gremlin monitor face.
+// Kloppy's tray and window icon, drawn entirely in code with no image assets.
+// A tiny pixel art version of the whitepaper paperclip mascot with the fund cup.
 
 const { nativeImage } = require('electron');
 
 // One character per pixel:
-//   .  transparent      C  gray chassis      D  dark screen
-//   E  phosphor glow    b  dark gray (stems/legs)
+//   .  transparent      K  black outline      S  silver wire
+//   Y  sticky note      C  fund cup           L  cup label
 const ART = [
-  '................',
-  '..E..........E..',
-  '...b........b...',
-  '.CCCCCCCCCCCCCC.',
-  '.CDDDDDDDDDDDDC.',
-  '.CDEEDDDDDDEEDC.',
-  '.CDEEDDDDDDEEDC.',
-  '.CDDDDDDDDDDDDC.',
-  '.CDEDEDEDEDEDDC.',
-  '.CDDDDDDDDDDDDC.',
-  '.CCCCCCCCCCCCCC.',
-  '....b......b....',
-  '....b......b....',
-  '...bb......bb...',
-  '................',
-  '................',
+  '................................',
+  '................................',
+  '...........KKKKKK...............',
+  '.........KKSSSSSSKK.............',
+  '........KSS......SSK............',
+  '.......KSS........SSK...........',
+  '.......KSS........SSK...........',
+  '.......KSS..KKKKKKKKKK..........',
+  '.......KSS.KYYYYYYYYYYK.........',
+  '.......KSS.KYYKKYYKKYYK.........',
+  '.......KSS.KYYKKYYKKYYK.........',
+  '.......KSS.KYYYYYYYYYYK.........',
+  '.......KSS.KYYYKKKKYYYK.........',
+  '.......KSS.KYYYYYYYYYYK.........',
+  '.......KSS..KKKKKKKKKK..........',
+  '.......KSS........SSK...........',
+  '.......KSS........SSK...........',
+  '.......KSS........SSK...KKKK....',
+  '.......KSS........SSK..KCCCCK...',
+  '.......KSS..KKKK..SSK..KCLLK....',
+  '.......KSS.KSSSSK.SSK..KCCCCK...',
+  '.......KSS.KSSSSK.SSK...KKKK....',
+  '.......KSS.KSSSSK.SSK...........',
+  '.......KSS..KKKK..SSK...........',
+  '.......KSS........SSK...........',
+  '........KSS......SSK............',
+  '.........KSS....SSK.............',
+  '..........KSSSSSSK..............',
+  '...........KKKKKK...............',
+  '................................',
+  '................................',
+  '................................',
 ];
 
 // [red, green, blue, alpha] per palette character
 const PALETTE = {
   '.': [0, 0, 0, 0],
-  C: [198, 198, 198, 255],
-  D: [12, 58, 18, 255],
-  E: [130, 240, 120, 255],
-  b: [80, 80, 80, 255],
+  K: [0, 0, 0, 255],
+  S: [198, 205, 210, 255],
+  Y: [246, 226, 162, 255],
+  C: [205, 233, 255, 180],
+  L: [245, 237, 210, 255],
 };
 
 function createTrayIcon() {
-  const size = 16;
+  const size = ART.length;
+  if (!ART.every((row) => row.length === size)) {
+    throw new Error('Tray icon art must be square.');
+  }
+
   const buffer = Buffer.alloc(size * size * 4);
 
   ART.forEach((row, y) => {

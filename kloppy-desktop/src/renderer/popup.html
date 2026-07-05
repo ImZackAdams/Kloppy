@@ -7,20 +7,38 @@
 </head>
 <body class="summon-window">
 
-  <!-- Same CSS-only gremlin as the main window, just popping in to comment -->
+  <!-- Same paperclip mascot as the whitepaper, just popping in to comment -->
   <div class="kloppy-zone">
-    <div class="kloppy" aria-hidden="true">
-      <div class="antenna antenna-left"></div>
-      <div class="antenna antenna-right"></div>
-      <div class="head">
-        <div class="screen">
-          <div class="eye eye-left"></div>
-          <div class="eye eye-right"></div>
-          <div class="mouth"></div>
-        </div>
-      </div>
-      <div class="leg leg-left"></div>
-      <div class="leg leg-right"></div>
+    <div class="kloppy" role="img" aria-label="A legally distinct paperclip desktop buddy with a sticky note face and a fund cup">
+      <svg class="kloppy-svg" viewBox="0 0 160 210" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="popup-wire" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#f2f5f7" />
+            <stop offset="0.58" stop-color="#c6cdd2" />
+            <stop offset="1" stop-color="#9aa4ab" />
+          </linearGradient>
+        </defs>
+        <g class="sticker-group">
+          <ellipse cx="82" cy="197" rx="58" ry="7" fill="rgba(0, 0, 0, 0.62)" />
+          <path d="M43 188 Q47 176 51 169 L51 61 A31 31 0 0 1 113 61 L113 158 A22 22 0 0 1 69 158 L69 74 A13 13 0 0 1 95 74 L95 143" fill="none" stroke="#000" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M43 188 Q47 176 51 169 L51 61 A31 31 0 0 1 113 61 L113 158 A22 22 0 0 1 69 158 L69 74 A13 13 0 0 1 95 74 L95 143" fill="none" stroke="url(#popup-wire)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+          <g transform="rotate(-3 82 102)">
+            <rect x="53" y="72" width="62" height="58" rx="2" fill="#f6e2a2" stroke="#000" stroke-width="3" />
+            <path d="M62 88 L78 82 M89 82 L105 88" stroke="#000" stroke-width="4" stroke-linecap="round" />
+            <ellipse cx="72" cy="98" rx="8" ry="10" fill="#fff" stroke="#000" stroke-width="3" />
+            <ellipse cx="95" cy="98" rx="8" ry="10" fill="#fff" stroke="#000" stroke-width="3" />
+            <circle cx="72" cy="101" r="3.5" fill="#000" />
+            <circle cx="95" cy="101" r="3.5" fill="#000" />
+            <path d="M72 124 Q82 118 93 124" fill="none" stroke="#000" stroke-width="4" stroke-linecap="round" />
+          </g>
+          <g transform="rotate(8 124 145)">
+            <rect x="111" y="128" width="34" height="38" rx="5" fill="rgba(205, 233, 255, 0.34)" stroke="#000" stroke-width="4" />
+            <rect x="109" y="123" width="38" height="8" rx="3" fill="#cfe4ef" stroke="#000" stroke-width="4" />
+            <rect x="116" y="145" width="24" height="12" fill="#f5edd2" stroke="#000" stroke-width="2" />
+            <text x="128" y="154" font-family="'Courier New', Courier, monospace" font-size="7" font-weight="700" text-anchor="middle" fill="#000">FUND</text>
+          </g>
+        </g>
+      </svg>
     </div>
     <div class="bubble">
       <p id="bubble-text">Kloppy has appeared.</p>

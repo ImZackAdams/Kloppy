@@ -24,6 +24,7 @@ function createWindow() {
     minWidth: 360,
     minHeight: 420,
     title: 'Kloppy',
+    icon: createTrayIcon(),
     backgroundColor: '#1f7a6d',
     webPreferences: {
       // Safe defaults: the renderer has no direct access to Node.
@@ -46,7 +47,7 @@ function createWindow() {
 }
 
 function createTray() {
-  // The tray icon is generated in code (see tray-icon.js) — no asset files.
+  // The tray icon is generated in code (see tray-icon.js) to match the window icon.
   tray = new Tray(createTrayIcon());
   tray.setToolTip('Kloppy — your desktop gremlin');
   tray.setContextMenu(Menu.buildFromTemplate([
