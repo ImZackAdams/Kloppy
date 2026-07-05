@@ -64,6 +64,8 @@ function init(options) {
   getAssistantContext = options.getAssistantContext || null;
   localActions = options.localActions || null;
   broadcast = options.broadcast;
+  pendingAction = null;
+  askInFlight = false;
   refreshStatus();
 }
 

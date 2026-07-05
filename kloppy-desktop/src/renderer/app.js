@@ -381,7 +381,7 @@ async function openSettings() {
   panelBody.innerHTML = `
     <label class="fake-option">
       <input type="checkbox" id="set-launch-min"> Launch minimized
-      <span class="fine-print">(stored now, honored in a future version)</span>
+      <span class="fine-print">(starts hidden in the tray on next launch)</span>
     </label>
     <label class="fake-option">
       <input type="checkbox" id="set-commentary"> Random commentary while the app is open

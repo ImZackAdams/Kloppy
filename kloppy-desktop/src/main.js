@@ -1,7 +1,16 @@
 // Kloppy main process.
 // Creates the app window and system tray, and handles cross-platform lifecycle.
 
-const { app, BrowserWindow, Menu, Tray, ipcMain, screen, dialog } = require('electron');
+const {
+  app,
+  BrowserWindow,
+  Menu,
+  Tray,
+  ipcMain,
+  screen,
+  dialog,
+  Notification,
+} = require('electron');
 const path = require('path');
 const notes = require('./notes');
 const reminders = require('./reminders');
@@ -34,12 +43,14 @@ app.on('second-instance', () => {
   mainWindow.focus();
 });
 
-function createWindow() {
+function createWindow(options = {}) {
+  const { launchMinimized = false } = options;
   mainWindow = new BrowserWindow({
     width: 640,
     height: 720,
     minWidth: 360,
     minHeight: 420,
+    show: !launchMinimized,
     title: 'Kloppy',
     icon: createTrayIcon(),
     backgroundColor: '#1f7a6d',
@@ -61,6 +72,16 @@ function createWindow() {
       mainWindow.hide();
     }
   });
+}
+
+function notifyReminder(reminder) {
+  if (!reminder || !Notification.isSupported()) return;
+  const dueAt = new Date(reminder.dueAt);
+  if (Number.isNaN(dueAt.getTime()) || dueAt > new Date()) return;
+  new Notification({
+    title: 'Kloppy reminder',
+    body: reminder.text,
+  }).show();
 }
 
 // ---- The summon popup: a tiny Kloppy that pops up with commentary ----
@@ -164,7 +185,12 @@ app.whenReady().then(() => {
 
   ipcMain.handle('reminders:list', () => reminders.list());
   ipcMain.handle('reminders:add', (_event, text, dueAt) => reminders.add(text, dueAt));
-  ipcMain.handle('reminders:complete', (_event, id) => reminders.complete(id));
+  ipcMain.handle('reminders:complete', (_event, id) => {
+    const reminder = reminders.list().reminders.find((r) => r.id === id);
+    const result = reminders.complete(id);
+    if (result.ok) notifyReminder(reminder);
+    return result;
+  });
   ipcMain.handle('reminders:delete', (_event, id) => reminders.remove(id));
 
   ipcMain.handle('popup:summon', () => {
@@ -242,7 +268,7 @@ app.whenReady().then(() => {
     actions.add(name, description, command));
   ipcMain.handle('actions:delete', (_event, id) => actions.remove(id));
 
-  createWindow();
+  createWindow({ launchMinimized: settings.get().settings.launchMinimized });
   createTray();
 
   // macOS: clicking the dock icon re-shows the hidden window.

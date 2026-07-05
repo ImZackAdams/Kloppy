@@ -20,7 +20,8 @@ As of July 5, 2026, the desktop app is a source-runnable local-first MVP,
 not yet a packaged installer release. The current `main` branch includes
 first-run model setup, checksum-verified local AI download, local chat,
 notes, reminders, settings, folder watching, tray behavior, and inert
-action placeholders.
+action placeholders. It also has lightweight regression coverage for the
+local storage, deterministic chat commands, and setup-state mapping.
 
 The app is designed to be offline after setup. The only external network
 request in the app is the optional first-run model download, and that
@@ -29,11 +30,9 @@ download is user-approved, pinned, and checksum-verified before use.
 Current known gaps:
 
 - No packaged installers or signed/notarized builds yet
-- `launchMinimized` is stored but not honored
-- Reminders use in-app alerts, not OS-level notifications
 - Actions are stored placeholders only; nothing executes
-- Chat has local context and deterministic commands, but no automated
-  regression test suite yet
+- Reminder date parsing is intentionally small: relative/today/tomorrow/simple date inputs only
+- Model setup recovery diagnostics are still mostly Kloppy-voiced status text
 
 ## Features
 
@@ -43,9 +42,11 @@ Current known gaps:
   (see "Local AI chat" below)
 - **Notes** — quick local notes, stored on disk
 - **Reminders** — set a time; Kloppy checks every 30 seconds and yells
-  via a retro in-app alert (overdue ones fire on next launch)
+  via a retro in-app alert plus an OS-level notification (overdue ones
+  fire on next launch)
 - **Settings** — theme (midnight / beige / toxic green), random
-  commentary and its frequency, applied instantly
+  commentary and its frequency, launch minimized, local model path, and
+  optional user name
 - **Summon popup** — a small always-on-top mini-Kloppy window with a
   random remark (never stacks; there is only one Kloppy)
 - **System tray** — closing the window hides Kloppy to the tray; the
@@ -64,6 +65,13 @@ Current known gaps:
 ```bash
 npm install
 npm start
+```
+
+Regression tests and syntax checks:
+
+```bash
+npm test
+npm run check
 ```
 
 Note: if launching from a shell spawned inside VSCode, use
@@ -184,7 +192,9 @@ Important userData files/directories:
 - [x] Retro assistant window + CSS/SVG mascot
 - [x] Local notes
 - [x] Local reminders with in-app alerts
+- [x] OS-level notifications for reminders
 - [x] System tray with close-to-hide
+- [x] Honor "launch minimized" on startup
 - [x] Single-instance app guard
 - [x] Summon popup window
 - [x] Settings with themes, random commentary, local model path, and optional user name
@@ -196,14 +206,12 @@ Important userData files/directories:
 - [x] Download progress and cancel/cleanup path
 - [x] Local chat commands for date/time, identity, notes, and reminders
 - [x] Prompt-retrieved local context for notes, reminders, watched folders, and actions
+- [x] Automated regression tests for settings, storage, local chat intents, and setup-state mapping
 
 ### Next release priorities
 
-- [ ] Honor "launch minimized"
-- [ ] OS-level notifications for reminders
 - [ ] Package Linux/macOS/Windows builds
 - [ ] Add a release checklist for signed/notarized downloadable builds
-- [ ] Add automated tests for local chat intents and setup-state transitions
 - [ ] Improve reminder date parsing beyond simple relative/today/tomorrow/date inputs
 - [ ] Add model setup recovery diagnostics visible in the UI
 

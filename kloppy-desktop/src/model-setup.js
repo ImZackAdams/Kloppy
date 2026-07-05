@@ -36,6 +36,8 @@ function init(options) {
   getModelPath = options.getModelPath;
   saveModelPath = options.saveModelPath;
   onStatusChanged = options.onStatusChanged;
+  active = null;
+  setupStatus = { state: 'not-configured', detail: '' };
 }
 
 function defaultModelsDir() {
@@ -97,17 +99,23 @@ function clearFailure() {
   }
 }
 
-function getStatusForLlm() {
-  if (active || setupStatus.state === 'downloading' || setupStatus.state === 'verifying') {
-    return withInfo(setupStatus);
+function statusForLlm(currentSetupStatus, modelPath, hasActive) {
+  const current = currentSetupStatus || { state: 'not-configured', detail: '' };
+  if (hasActive || current.state === 'downloading' || current.state === 'verifying') {
+    return current;
   }
-  if (setupStatus.state === 'failed' && !getModelPath()) {
-    return withInfo(setupStatus);
+  if (current.state === 'failed' && !modelPath) {
+    return current;
   }
-  if (!getModelPath()) {
-    return withInfo({ state: 'not-configured', detail: '' });
+  if (!modelPath) {
+    return { state: 'not-configured', detail: '' };
   }
   return null;
+}
+
+function getStatusForLlm() {
+  const mapped = statusForLlm(setupStatus, getModelPath(), Boolean(active));
+  return mapped ? withInfo(mapped) : null;
 }
 
 function getInfo() {
@@ -306,4 +314,5 @@ module.exports = {
   downloadDefault,
   cancelDownload,
   clearFailure,
+  statusForLlm,
 };
