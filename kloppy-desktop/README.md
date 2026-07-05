@@ -63,6 +63,14 @@ Tray menu:
   main window (visible next time you show it, if it's hidden)
 - **Quit** — actually exits. The only way out.
 
+## Summon popup
+
+"Summon Kloppy" (main window button or tray menu) opens a small
+always-on-top popup in the bottom-right corner where a mini Kloppy
+delivers a random remark. Summoning again reuses the same popup —
+Kloppys do not stack. "Go away, Kloppy" closes it. He does not
+take it personally.
+
 ## Reminders
 
 While the app is open, the renderer checks every 30 seconds for due

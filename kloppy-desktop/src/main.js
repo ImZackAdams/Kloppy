@@ -1,7 +1,7 @@
 // Kloppy main process.
 // Creates the app window and system tray, and handles cross-platform lifecycle.
 
-const { app, BrowserWindow, Menu, Tray, ipcMain } = require('electron');
+const { app, BrowserWindow, Menu, Tray, ipcMain, screen } = require('electron');
 const path = require('path');
 const notes = require('./notes');
 const reminders = require('./reminders');
@@ -46,6 +46,59 @@ function createWindow() {
   });
 }
 
+// ---- The summon popup: a tiny Kloppy that pops up with commentary ----
+
+const summonLines = [
+  "It looks like you're avoiding the real task.",
+  'I noticed you opened settings. Bold move.',
+  'Your filesystem has vibes. Bad ones.',
+  'Reminder: productivity is just procrastination with branding.',
+  'Please insert Disk 2.',
+];
+
+let popupWindow = null;
+
+function summonKloppy() {
+  const message = summonLines[Math.floor(Math.random() * summonLines.length)];
+
+  // Reuse the existing popup, so summoning twice never stacks windows.
+  if (popupWindow && !popupWindow.isDestroyed()) {
+    popupWindow.webContents.send('popup:message', message);
+    popupWindow.show();
+    return;
+  }
+
+  const width = 420;
+  const height = 260;
+  const { workArea } = screen.getPrimaryDisplay();
+
+  popupWindow = new BrowserWindow({
+    width,
+    height,
+    // Bottom-right corner, like a creature peeking out of the taskbar.
+    x: workArea.x + workArea.width - width - 16,
+    y: workArea.y + workArea.height - height - 16,
+    resizable: false,
+    alwaysOnTop: true,
+    title: 'Kloppy!',
+    icon: createTrayIcon(),
+    backgroundColor: '#1f7a6d',
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      preload: path.join(__dirname, 'preload.js'),
+    },
+  });
+
+  popupWindow.loadFile(path.join(__dirname, 'renderer', 'popup.html'));
+  popupWindow.webContents.on('did-finish-load', () => {
+    popupWindow.webContents.send('popup:message', message);
+  });
+  popupWindow.on('closed', () => {
+    popupWindow = null;
+  });
+}
+
 function createTray() {
   // The tray icon is generated in code (see tray-icon.js) to match the window icon.
   tray = new Tray(createTrayIcon());
@@ -57,6 +110,7 @@ function createTray() {
       label: 'Say something cursed',
       click: () => mainWindow.webContents.send('kloppy:cursed'),
     },
+    { label: 'Summon Kloppy', click: summonKloppy },
     { type: 'separator' },
     // The only true exit. Sets isQuitting via before-quit, so the
     // window's close handler lets the app actually shut down.
@@ -78,6 +132,11 @@ app.whenReady().then(() => {
   ipcMain.handle('reminders:add', (_event, text, dueAt) => reminders.add(text, dueAt));
   ipcMain.handle('reminders:complete', (_event, id) => reminders.complete(id));
   ipcMain.handle('reminders:delete', (_event, id) => reminders.remove(id));
+
+  ipcMain.handle('popup:summon', () => {
+    summonKloppy();
+    return { ok: true };
+  });
 
   createWindow();
   createTray();

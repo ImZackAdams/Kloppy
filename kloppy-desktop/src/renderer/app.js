@@ -350,3 +350,9 @@ document.getElementById('btn-settings').addEventListener('click', () => {
   say('You can look at the settings. Looking is free.');
   setStatus(statusLines.settings);
 });
+
+document.getElementById('btn-summon').addEventListener('click', () => {
+  window.kloppy.summon();
+  say('Deploying a smaller me. This is fine.');
+  setStatus('Kloppy has been summoned elsewhere.');
+});

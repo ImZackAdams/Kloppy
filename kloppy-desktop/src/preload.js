@@ -19,4 +19,7 @@ contextBridge.exposeInMainWorld('kloppy', {
   },
   // Main-process events the renderer reacts to (tray menu items).
   onCursed: (callback) => ipcRenderer.on('kloppy:cursed', () => callback()),
+  // Summon popup: ask main to spawn/reuse the popup, and receive its message.
+  summon: () => ipcRenderer.invoke('popup:summon'),
+  onPopupMessage: (callback) => ipcRenderer.on('popup:message', (_event, text) => callback(text)),
 });

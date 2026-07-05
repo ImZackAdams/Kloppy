@@ -412,6 +412,35 @@ button:active {
   text-overflow: ellipsis;
 }
 
+/* ---- Summon popup window (popup.html) ---- */
+
+.summon-window {
+  flex-direction: column;   /* body is already display:flex */
+  gap: 10px;
+  padding: 12px;
+}
+
+.summon-window .kloppy-zone {
+  flex: 1;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  margin-bottom: 0;
+}
+
+.summon-window .kloppy {
+  width: 90px;
+  height: 119px;
+  transform: rotate(-4deg);
+}
+
+.summon-window .bubble { min-width: 120px; }
+
+.summon-window > button {
+  flex: 0 0 auto;
+  align-self: flex-end;
+  min-width: 150px;
+}
+
 /* ---- Animations ---- */
 
 @keyframes kloppy-bob {
