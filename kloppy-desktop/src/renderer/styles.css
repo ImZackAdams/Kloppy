@@ -76,31 +76,6 @@ body {
   overflow: visible;
 }
 
-.titlebar-logo path:first-child {
-  fill: none;
-  stroke: #9aa4ab;
-  stroke-width: 3.2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.titlebar-logo rect {
-  fill: #f6e2a2;
-  stroke: #000;
-  stroke-width: 1.8;
-}
-
-.titlebar-logo circle {
-  fill: #000;
-}
-
-.titlebar-logo path:last-child {
-  fill: none;
-  stroke: #000;
-  stroke-width: 1.7;
-  stroke-linecap: round;
-}
-
 .titlebar-text {
   flex: 1;
   overflow: hidden;
@@ -143,7 +118,7 @@ body {
   padding: 12px 10px 4px;
 }
 
-/* ---- Kloppy: the paperclip mascot from the website ---- */
+/* Kloppy, the paperclip mascot from the whitepaper */
 
 .kloppy-zone {
   display: flex;
