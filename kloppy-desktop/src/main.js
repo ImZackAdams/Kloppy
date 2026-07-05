@@ -179,6 +179,7 @@ app.whenReady().then(() => {
   llm.init({
     getModelPath: () => settings.get().settings.modelPath,
     getSetupStatus: () => modelSetup.getStatusForLlm(),
+    getLlamafileHomeDir: () => path.join(userDataDir, 'llamafile-runtime'),
     broadcast: (status) => {
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send('llm:status', status);

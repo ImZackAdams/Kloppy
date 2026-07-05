@@ -10,6 +10,7 @@
 const { spawn } = require('child_process');
 const fs = require('fs');
 const net = require('net');
+const path = require('path');
 
 const STARTUP_TIMEOUT_MS = 90 * 1000; // big models take a while to load
 const HEALTH_POLL_MS = 500;
@@ -23,9 +24,10 @@ const SYSTEM_PROMPT =
   'three short sentences, deadpan and a little unhinged, but always actually ' +
   'answer the user\'s question or request first. Never use markdown.';
 
-let getModelPath = null;    // injected by main.js; reads the settings file
-let getSetupStatus = null;  // injected by main.js; first-run download state
-let broadcast = null;       // injected by main.js; pushes status to windows
+let getModelPath = null;           // injected by main.js; reads the settings file
+let getSetupStatus = null;         // injected by main.js; first-run download state
+let getLlamafileHomeDir = null;    // injected by main.js; keeps runtime files in userData
+let broadcast = null;              // injected by main.js; pushes status to windows
 
 let child = null;        // running llamafile server, if any
 let runningPath = null;  // model path the current child was started with
@@ -43,6 +45,7 @@ let status = { state: 'not-configured', detail: '' };
 function init(options) {
   getModelPath = options.getModelPath;
   getSetupStatus = options.getSetupStatus || null;
+  getLlamafileHomeDir = options.getLlamafileHomeDir || null;
   broadcast = options.broadcast;
   refreshStatus();
 }
@@ -104,6 +107,27 @@ function baseUrl() {
   return `http://127.0.0.1:${port}`;
 }
 
+function childEnv() {
+  const env = { ...process.env };
+  if (!getLlamafileHomeDir) return env;
+
+  const runtimeDir = getLlamafileHomeDir();
+  if (!runtimeDir) return env;
+
+  const homeDir = path.join(runtimeDir, 'home');
+  const cacheDir = path.join(runtimeDir, 'cache');
+  const localAppDataDir = path.join(runtimeDir, 'local-app-data');
+  fs.mkdirSync(homeDir, { recursive: true });
+  fs.mkdirSync(cacheDir, { recursive: true });
+  fs.mkdirSync(localAppDataDir, { recursive: true });
+
+  env.HOME = homeDir;
+  env.USERPROFILE = homeDir;
+  env.XDG_CACHE_HOME = cacheDir;
+  env.LOCALAPPDATA = localAppDataDir;
+  return env;
+}
+
 async function waitForHealthy(proc) {
   const deadline = Date.now() + STARTUP_TIMEOUT_MS;
   while (Date.now() < deadline) {
@@ -142,13 +166,13 @@ async function start() {
     return false;
   }
 
-  const args = ['--server', '--nobrowser', '--host', '127.0.0.1', '--port', String(port)];
+  const args = ['--server', '--host', '127.0.0.1', '--port', String(port)];
   try {
-    // llamafiles are polyglot binaries that need a shell to bootstrap on
-    // POSIX systems; on Windows they run directly (renamed to .exe).
-    child = process.platform === 'win32'
-      ? spawn(modelPath, args, { stdio: 'ignore', windowsHide: true })
-      : spawn('/bin/sh', [modelPath, ...args], { stdio: 'ignore' });
+    child = spawn(modelPath, args, {
+      stdio: 'ignore',
+      windowsHide: true,
+      env: childEnv(),
+    });
   } catch {
     child = null;
     setStatus('error', 'spawn-failed');
@@ -219,7 +243,11 @@ async function ask(prompt) {
     const ready = await ensureReady();
     if (!ready) {
       // status already says why (not-configured / model-missing / ...)
-      return { ok: false, error: status.state === 'not-configured' ? 'not-configured' : 'start-failed' };
+      return {
+        ok: false,
+        error: status.state === 'not-configured' ? 'not-configured' : 'start-failed',
+        detail: status.detail,
+      };
     }
 
     let res;

@@ -733,14 +733,23 @@ async function openChat() {
 const askErrorLines = {
   'not-configured':
     "I can't answer that: no brain configured. Run Setup or save a Local model path. Then we talk.",
-  'start-failed':
-    'I tried to wake my brain and it refused. Check the note above, then try again.',
   busy: 'Still chewing on your last message. One thought at a time.',
   empty: 'You have to type actual words. Any words.',
   'too-long': "That's a manifesto, not a message. Keep it under 2000 characters.",
   'request-failed': 'My brain produced static instead of words. Try again.',
   'bad-reply': 'My brain replied with pure nothing. Even I am unsettled. Try again.',
 };
+
+function startFailedLine(detail) {
+  const lines = {
+    'model-missing': 'That model path points at nothing. Settings has some explaining to do.',
+    'spawn-failed': 'I could not execute that llamafile. Check the path and executable bit.',
+    crashed: 'The model process exited during startup. Kloppy has filed a complaint with physics.',
+    'no-response': 'The model started but never answered health checks. Try again, or use a smaller model.',
+    'no-port': 'No free localhost port found. Impressive, but not helpful.',
+  };
+  return lines[detail] || 'I tried to wake my brain and it refused. Check the note above, then try again.';
+}
 
 async function sendChat() {
   const input = document.getElementById('chat-input');
@@ -764,7 +773,9 @@ async function sendChat() {
   if (btnNow) btnNow.disabled = false;
 
   if (!result.ok) {
-    appendChat('kloppy', askErrorLines[result.error] || 'Something went wrong in there. Try again.');
+    appendChat('kloppy', result.error === 'start-failed'
+      ? startFailedLine(result.detail)
+      : askErrorLines[result.error] || 'Something went wrong in there. Try again.');
     setStatus('Kloppy brain hiccup. No thoughts were harmed.');
     return;
   }
