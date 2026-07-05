@@ -7,6 +7,7 @@ const notes = require('./notes');
 const reminders = require('./reminders');
 const settings = require('./settings');
 const watcher = require('./watcher');
+const actions = require('./actions');
 const { createTrayIcon } = require('./tray-icon');
 
 // Keep module-level references: if the window or tray object gets
@@ -125,6 +126,7 @@ app.whenReady().then(() => {
   notes.init(app.getPath('userData'));
   reminders.init(app.getPath('userData'));
   settings.init(app.getPath('userData'));
+  actions.init(app.getPath('userData'));
   watcher.init(app.getPath('userData'), (event) => {
     // Forward filesystem events to the main window so Kloppy can react.
     if (mainWindow && !mainWindow.isDestroyed()) {
@@ -164,6 +166,13 @@ app.whenReady().then(() => {
     return watcher.add(result.filePaths[0]);
   });
   ipcMain.handle('watcher:remove', (_event, dir) => watcher.remove(dir));
+
+  // Actions are stored, listed, deleted — deliberately NO "run" channel.
+  // See the safety TODO in actions.js before ever adding one.
+  ipcMain.handle('actions:list', () => actions.list());
+  ipcMain.handle('actions:add', (_event, name, description, command) =>
+    actions.add(name, description, command));
+  ipcMain.handle('actions:delete', (_event, id) => actions.remove(id));
 
   createWindow();
   createTray();

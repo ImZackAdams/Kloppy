@@ -498,6 +498,105 @@ async function refreshWatcherPanel() {
   }
 }
 
+// ---- Actions panel (placeholders only — nothing executes) ----
+
+async function openActions() {
+  panelTitle.textContent = 'ACTIONS.BAT';
+  panelBody.innerHTML = `
+    <div class="note-editor action-form">
+      <input id="action-name" type="text" placeholder="Action name">
+      <input id="action-desc" type="text" placeholder="What it will someday do">
+      <input id="action-cmd" type="text" placeholder="Command (decorative, not executed)">
+      <button id="action-save" type="button">Save action</button>
+    </div>
+    <p class="fine-print">Actions are placeholders for future allowlisted automations.
+      Command execution is <b>not implemented</b> — the text is stored, never run.</p>
+    <h3 class="list-heading">SAVED ACTIONS</h3>
+    <ul class="note-list" id="action-list"></ul>`;
+
+  document.getElementById('action-save').addEventListener('click', saveAction);
+  await refreshActions();
+}
+
+async function refreshActions() {
+  const listEl = document.getElementById('action-list');
+  if (!listEl) return;
+
+  const result = await window.kloppy.actions.list();
+  listEl.textContent = '';
+
+  for (const action of result.actions) {
+    const li = document.createElement('li');
+    li.className = 'note';
+
+    const text = document.createElement('p');
+    text.className = 'note-text';
+    text.textContent = action.description
+      ? `${action.name} — ${action.description}`
+      : action.name;
+
+    const meta = document.createElement('div');
+    meta.className = 'note-meta';
+
+    const cmd = document.createElement('span');
+    cmd.textContent = action.command ? `$ ${action.command}` : '(no command text)';
+
+    const run = document.createElement('button');
+    run.type = 'button';
+    run.className = 'note-delete';
+    run.textContent = 'Run';
+    run.addEventListener('click', () => {
+      // Deliberately does nothing. See the safety TODO in src/actions.js.
+      say('Kloppy refuses to run this until you add a safety model.');
+      setStatus('Action not executed. Kloppy values his warranty.');
+    });
+
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'note-delete';
+    del.textContent = 'Delete';
+    del.addEventListener('click', async () => {
+      await window.kloppy.actions.remove(action.id);
+      say('Action deleted before it could not-run even once.');
+      setStatus('Action deleted.');
+      await refreshActions();
+    });
+
+    meta.append(cmd, run, del);
+    li.append(text, meta);
+    listEl.appendChild(li);
+  }
+
+  if (listEl.children.length === 0) {
+    emptyItem(listEl, 'No actions yet. Kloppy remains gloriously useless.');
+  }
+}
+
+async function saveAction() {
+  const name = document.getElementById('action-name');
+  const desc = document.getElementById('action-desc');
+  const cmd = document.getElementById('action-cmd');
+
+  const result = await window.kloppy.actions.add(name.value, desc.value, cmd.value);
+  if (!result.ok) {
+    if (result.error === 'no-name') {
+      say('An action with no name? That is how hauntings start. No.');
+      setStatus('Actions need a name.');
+    } else {
+      say(`Keep it under ${result.max} characters. Kloppy has a small filing cabinet.`);
+      setStatus('Action text too long.');
+    }
+    return;
+  }
+
+  name.value = '';
+  desc.value = '';
+  cmd.value = '';
+  say('Action filed away. It will do nothing, beautifully.');
+  setStatus('Action saved. Execution: still refused.');
+  await refreshActions();
+}
+
 // ---- Cursed remarks (triggered from the tray menu) ----
 
 const cursedLines = [
@@ -544,6 +643,12 @@ document.getElementById('btn-watcher').addEventListener('click', () => {
   say('Show me the folder. I will guard it with my life. Or at least glance at it.');
   setStatus('Kloppy is on watch duty.');
   openWatcher();
+});
+
+document.getElementById('btn-actions').addEventListener('click', () => {
+  say('Behold: buttons that refuse to do things. Safety first.');
+  setStatus('Kloppy opened the actions drawer.');
+  openActions();
 });
 
 document.getElementById('btn-summon').addEventListener('click', () => {

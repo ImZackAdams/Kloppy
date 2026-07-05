@@ -89,6 +89,16 @@ reminders. When one comes due, Kloppy shows a retro in-app alert popup,
 marks the reminder completed, and files it under "already yelled about".
 Reminders that came due while the app was closed fire on next launch.
 
+## Actions (placeholder)
+
+The Actions panel stores named actions with decorative command text in
+`actions.json`. **Nothing is ever executed** — there is intentionally no
+IPC channel that runs anything, and "Run" only makes Kloppy refuse.
+This is the foundation for future allowlisted automations; see the
+safety TODO list in `src/actions.js` (allowlists, confirmation prompts,
+run logs, no secret exposure, no silent background execution) that must
+exist before a real run button does.
+
 ## Folder watcher & privacy
 
 The Folder Watcher panel lets you pick folders (via the OS folder

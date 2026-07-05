@@ -21,6 +21,11 @@ contextBridge.exposeInMainWorld('kloppy', {
     get: () => ipcRenderer.invoke('settings:get'),
     update: (partial) => ipcRenderer.invoke('settings:update', partial),
   },
+  actions: {
+    list: () => ipcRenderer.invoke('actions:list'),
+    add: (name, description, command) => ipcRenderer.invoke('actions:add', name, description, command),
+    remove: (id) => ipcRenderer.invoke('actions:delete', id),
+  },
   watcher: {
     list: () => ipcRenderer.invoke('watcher:list'),
     choose: () => ipcRenderer.invoke('watcher:choose'),
