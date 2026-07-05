@@ -1,0 +1,13 @@
+{
+  "name": "kloppy-desktop",
+  "version": "0.0.1",
+  "description": "Kloppy: a retro desktop gremlin assistant. He means well. Probably.",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^41.7.1"
+  }
+}
