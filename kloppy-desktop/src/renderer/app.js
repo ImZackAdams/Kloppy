@@ -1,6 +1,6 @@
 // Kloppy renderer logic.
-// Buttons swap the main panel between placeholder states,
-// make Kloppy talk, and update the status bar.
+// Buttons swap the main panel, make Kloppy talk, and update the status bar.
+// Notes are real: stored on disk via the preload bridge (window.kloppy.notes).
 
 // ---- Kloppy's words of wisdom ----
 
@@ -14,7 +14,7 @@ const quips = [
   "Fun fact: every unread notification makes me stronger.",
 ];
 
-// ---- Panel placeholder states (real features arrive later) ----
+// ---- Static panels (placeholders until their features arrive) ----
 
 const panels = {
   welcome: {
@@ -23,13 +23,6 @@ const panels = {
       <p>Kloppy is a desktop gremlin. He lives in this window now.</p>
       <p>Press a button below. Kloppy is waiting. Kloppy is patient.*</p>
       <p class="fine-print">* Kloppy is not patient.</p>`,
-  },
-  notes: {
-    title: 'NOTES.DAT',
-    body: `
-      <p>NOTES.DAT could not be found.</p>
-      <p>Kloppy checked twice. Kloppy even looked behind the recycle bin.</p>
-      <p class="fine-print">Note storage is coming in a future version.</p>`,
   },
   reminder: {
     title: 'REMIND.SYS',
@@ -51,9 +44,12 @@ const panels = {
 const statusLines = {
   idle: 'Kloppy is idle, suspiciously.',
   say: 'Kloppy is saying words. Nobody asked.',
-  notes: 'Kloppy is pretending to look for your notes.',
   reminder: 'Kloppy will remind you at some point. Probably.',
   settings: 'Kloppy resents being configured.',
+  noteSaved: 'Note swallowed whole. It is safe now. Probably.',
+  noteDeleted: 'Note shredded. Kloppy ate the shreds.',
+  noteEmpty: 'Kloppy refuses to store the concept of nothing.',
+  noteTooLong: "That's a novel, not a note. 500 characters max.",
 };
 
 // ---- DOM helpers ----
@@ -76,6 +72,94 @@ function showPanel(name) {
   panelBody.innerHTML = panels[name].body;
 }
 
+// ---- Notes panel ----
+
+async function openNotes() {
+  panelTitle.textContent = 'NOTES.DAT';
+  panelBody.innerHTML = `
+    <div class="note-editor">
+      <textarea id="note-input" rows="3"
+        placeholder="Type a note. Kloppy will guard it."></textarea>
+      <button id="note-save" type="button">Save note</button>
+    </div>
+    <p class="fine-print">Stored locally in notes.json. Kloppy never phones home. 500 chars max.</p>
+    <ul class="note-list" id="note-list"></ul>`;
+
+  const input = document.getElementById('note-input');
+  document.getElementById('note-save').addEventListener('click', saveNote);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) saveNote();
+  });
+
+  await refreshNotes();
+}
+
+async function refreshNotes() {
+  const result = await window.kloppy.notes.list();
+  const listEl = document.getElementById('note-list');
+  listEl.textContent = '';
+
+  for (const note of result.notes) {
+    // Built with createElement + textContent so note text is never
+    // interpreted as HTML.
+    const li = document.createElement('li');
+    li.className = 'note';
+
+    const text = document.createElement('p');
+    text.className = 'note-text';
+    text.textContent = note.text;
+
+    const meta = document.createElement('div');
+    meta.className = 'note-meta';
+
+    const date = document.createElement('span');
+    date.textContent = new Date(note.createdAt).toLocaleString();
+
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'note-delete';
+    del.textContent = 'Shred';
+    del.addEventListener('click', async () => {
+      await window.kloppy.notes.remove(note.id);
+      say('It never existed. We never speak of it again.');
+      setStatus(statusLines.noteDeleted);
+      await refreshNotes();
+    });
+
+    meta.append(date, del);
+    li.append(text, meta);
+    listEl.appendChild(li);
+  }
+
+  if (result.notes.length === 0) {
+    const empty = document.createElement('li');
+    empty.className = 'note note-empty';
+    empty.textContent = 'No notes yet. Kloppy guards an empty vault.';
+    listEl.appendChild(empty);
+  }
+}
+
+async function saveNote() {
+  const input = document.getElementById('note-input');
+  const result = await window.kloppy.notes.add(input.value);
+
+  if (!result.ok) {
+    if (result.error === 'empty') {
+      say('You want me to remember... nothing? Bold. No.');
+      setStatus(statusLines.noteEmpty);
+    } else if (result.error === 'too-long') {
+      say(`That note is over ${result.max} characters. I'm a gremlin, not a library.`);
+      setStatus(statusLines.noteTooLong);
+    }
+    return;
+  }
+
+  input.value = '';
+  say('Note saved. I am guarding it with moderate enthusiasm.');
+  setStatus(statusLines.noteSaved);
+  await refreshNotes();
+}
+
 // ---- Wire up the buttons ----
 
 let quipIndex = 0;
@@ -87,9 +171,8 @@ document.getElementById('btn-say').addEventListener('click', () => {
 });
 
 document.getElementById('btn-notes').addEventListener('click', () => {
-  showPanel('notes');
-  say('Notes? Bold of you to assume I kept them.');
-  setStatus(statusLines.notes);
+  say('Ah, the notes. I keep them in a jar.');
+  openNotes();
 });
 
 document.getElementById('btn-reminder').addEventListener('click', () => {

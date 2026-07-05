@@ -1,8 +1,9 @@
 // Kloppy main process.
 // Creates the app window and handles cross-platform lifecycle.
 
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const notes = require('./notes');
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -24,6 +25,14 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  // Note storage lives next to the app's other user data.
+  notes.init(app.getPath('userData'));
+
+  // IPC endpoints the preload bridge is allowed to call.
+  ipcMain.handle('notes:list', () => notes.list());
+  ipcMain.handle('notes:add', (_event, text) => notes.add(text));
+  ipcMain.handle('notes:delete', (_event, id) => notes.remove(id));
+
   createWindow();
 
   // macOS: re-create a window when the dock icon is clicked

@@ -1,10 +1,14 @@
 // Kloppy preload script.
-// Runs before the renderer with access to a limited Electron API.
-// Nothing is exposed yet — this exists so the safe wiring is in place
-// for when Kloppy learns real tricks (notes, reminders, etc.).
+// The renderer has no Node access (contextIsolation on, nodeIntegration off),
+// so this bridge exposes exactly the few calls Kloppy needs — nothing more.
 
-const { contextBridge } = require('electron');
+const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('kloppy', {
   version: '0.0.1',
+  notes: {
+    list: () => ipcRenderer.invoke('notes:list'),
+    add: (text) => ipcRenderer.invoke('notes:add', text),
+    remove: (id) => ipcRenderer.invoke('notes:delete', id),
+  },
 });
