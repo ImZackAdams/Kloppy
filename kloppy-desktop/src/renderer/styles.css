@@ -10,8 +10,6 @@
   --ink: #1a1a1a;
   --title-grad-a: #1b1b6f;     /* fake title bar gradient */
   --title-grad-b: #7a3fa0;
-  --crt: #0c3a12;              /* Kloppy's screen-face */
-  --crt-glow: #b6f7b0;         /* eyes, mouth, phosphor green */
   --paper: #fffdf2;            /* panel + speech bubble background */
 }
 
@@ -20,7 +18,7 @@
   border: 2px solid;
   border-color: var(--bevel-light) var(--bevel-dark) var(--bevel-dark) var(--bevel-light);
 }
-.screen, .panel, .status-cell {
+.panel, .status-cell {
   border: 2px solid;
   border-color: var(--bevel-dark) var(--bevel-light) var(--bevel-light) var(--bevel-dark);
 }
@@ -62,10 +60,45 @@ body {
 }
 
 .titlebar-icon {
-  width: 14px;
-  height: 14px;
-  background: var(--crt-glow);
-  border: 2px solid var(--crt);
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  background: var(--paper);
+  border: 1px solid #000;
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.45);
+  transform: rotate(-7deg);
+}
+
+.titlebar-logo {
+  width: 16px;
+  height: 16px;
+  overflow: visible;
+}
+
+.titlebar-logo path:first-child {
+  fill: none;
+  stroke: #9aa4ab;
+  stroke-width: 3.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.titlebar-logo rect {
+  fill: #f6e2a2;
+  stroke: #000;
+  stroke-width: 1.8;
+}
+
+.titlebar-logo circle {
+  fill: #000;
+}
+
+.titlebar-logo path:last-child {
+  fill: none;
+  stroke: #000;
+  stroke-width: 1.7;
+  stroke-linecap: round;
 }
 
 .titlebar-text {
@@ -110,7 +143,7 @@ body {
   padding: 12px 10px 4px;
 }
 
-/* ---- Kloppy the gremlin: a tiny CRT monitor with legs ---- */
+/* ---- Kloppy: the paperclip mascot from the website ---- */
 
 .kloppy-zone {
   display: flex;
@@ -122,112 +155,37 @@ body {
 
 .kloppy {
   position: relative;
-  width: 110px;
-  height: 122px;
+  width: 150px;
+  height: 198px;
   flex-shrink: 0;
-  animation: bob 3s ease-in-out infinite;
+  transform: rotate(-5deg);
 }
 
-.head {
-  position: absolute;
-  top: 16px;
-  left: 5px;
-  width: 100px;
-  height: 82px;
-  padding: 7px;
-  background: var(--chassis);
-  border: 2px solid;
-  border-color: var(--bevel-light) var(--bevel-dark) var(--bevel-dark) var(--bevel-light);
-  border-radius: 6px;
-}
-
-.screen {
-  position: relative;
+.kloppy-svg {
+  display: block;
+  width: 100%;
   height: 100%;
-  background: var(--crt);
-  border-radius: 4px;
-  overflow: hidden;
+  overflow: visible;
 }
 
-.eye {
-  position: absolute;
-  top: 12px;
-  width: 14px;
-  height: 18px;
-  background: var(--crt-glow);
-  border-radius: 50%;
-  animation: blink 4s infinite;
-}
-.eye-left  { left: 17px; }
-.eye-right { right: 17px; animation-delay: 0.15s; }
-
-.eye::after {          /* pupil */
-  content: "";
-  position: absolute;
-  left: 4px;
-  top: 7px;
-  width: 6px;
-  height: 7px;
-  background: var(--crt);
-  border-radius: 50%;
+.kloppy-svg .sticker-group {
+  filter: drop-shadow(4px 4px 0 rgba(0, 0, 0, 0.45));
+  animation: kloppy-bob 4.6s ease-in-out infinite;
 }
 
-.mouth {
-  position: absolute;
-  bottom: 7px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 50px;
-  height: 11px;
-  background: var(--crt-glow);
-  /* zigzag bottom edge = goblin teeth */
-  clip-path: polygon(
-    0 0, 100% 0, 100% 45%, 87% 100%, 75% 45%, 62% 100%,
-    50% 45%, 38% 100%, 25% 45%, 13% 100%, 0 45%
-  );
+.kloppy-svg .lid {
+  transform-box: fill-box;
+  transform-origin: center top;
+  animation: kloppy-blink 5.4s infinite;
 }
 
-.antenna {
-  position: absolute;
-  top: 2px;
-  width: 4px;
-  height: 18px;
-  background: var(--bevel-dark);
-}
-.antenna-left  { left: 30px; transform: rotate(-18deg); }
-.antenna-right { right: 30px; transform: rotate(18deg); }
-
-.antenna::after {      /* glowing bobble on top */
-  content: "";
-  position: absolute;
-  top: -8px;
-  left: -3px;
-  width: 10px;
-  height: 10px;
-  background: var(--crt-glow);
-  border: 1px solid var(--crt);
-  border-radius: 50%;
+.kloppy-svg .steam {
+  transform-box: fill-box;
+  animation: kloppy-steam 3.2s ease-in-out infinite;
 }
 
-.leg {
-  position: absolute;
-  bottom: 8px;
-  width: 9px;
-  height: 16px;
-  background: var(--bevel-dark);
-}
-.leg-left  { left: 32px; }
-.leg-right { right: 32px; }
-
-.leg::after {          /* little foot */
-  content: "";
-  position: absolute;
-  bottom: -6px;
-  left: -4px;
-  width: 18px;
-  height: 6px;
-  background: var(--ink);
-  border-radius: 3px;
+.kloppy-svg .steam.two {
+  animation-delay: 1.6s;
 }
 
 /* ---- Speech bubble ---- */
@@ -481,16 +439,32 @@ button:active {
 
 /* ---- Animations ---- */
 
-@keyframes bob {
+@keyframes kloppy-bob {
   0%, 100% { transform: translateY(0); }
   50%      { transform: translateY(-4px); }
 }
 
-@keyframes blink {
+@keyframes kloppy-blink {
   0%, 90%, 100% { transform: scaleY(1); }
-  94%           { transform: scaleY(0.15); }
+  93%, 96%      { transform: scaleY(2.3); }
+}
+
+@keyframes kloppy-steam {
+  0%, 100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+
+  50% {
+    opacity: 0.75;
+    transform: translateY(-5px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .kloppy, .eye { animation: none; }
+  .kloppy-svg .sticker-group,
+  .kloppy-svg .lid,
+  .kloppy-svg .steam {
+    animation: none;
+  }
 }
