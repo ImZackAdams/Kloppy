@@ -1,2 +1,12 @@
 node_modules/
 dist/
+release/
+out/
+*.AppImage
+*.deb
+*.rpm
+*.dmg
+*.exe
+*.msi
+*.blockmap
+*.snap

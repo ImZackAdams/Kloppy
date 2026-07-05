@@ -16,12 +16,12 @@ step.
 
 ## Current status
 
-As of July 5, 2026, the desktop app is a source-runnable local-first MVP,
-not yet a packaged installer release. The current `main` branch includes
-first-run model setup, checksum-verified local AI download, local chat,
-notes, reminders, settings, folder watching, tray behavior, and inert
-action placeholders. It also has lightweight regression coverage for the
-local storage, deterministic chat commands, and setup-state mapping.
+As of July 5, 2026, the desktop app is a source-runnable and packageable
+local-first MVP. The current `main` branch includes first-run model setup,
+checksum-verified local AI download, local chat, notes, reminders, settings,
+folder watching, tray behavior, inert action placeholders, and Electron
+Builder release scripts. It also has lightweight regression coverage for
+the local storage, deterministic chat commands, and setup-state mapping.
 
 The app is designed to be offline after setup. The only external network
 request in the app is the optional first-run model download, and that
@@ -29,7 +29,8 @@ download is user-approved, pinned, and checksum-verified before use.
 
 Current known gaps:
 
-- No packaged installers or signed/notarized builds yet
+- Packaged builds are unsigned and not notarized yet
+- macOS and Windows artifacts should be produced on their target build hosts
 - Actions are stored placeholders only; nothing executes
 - Reminder date parsing is intentionally small: relative/today/tomorrow/simple date inputs only
 - Model setup recovery diagnostics are still mostly Kloppy-voiced status text
@@ -77,6 +78,68 @@ npm run check
 Note: if launching from a shell spawned inside VSCode, use
 `env -u ELECTRON_RUN_AS_NODE npm start` (VSCode sets that variable and
 it breaks Electron).
+
+## Release builds
+
+Packaging uses [Electron Builder](https://www.electron.build/) with a
+minimal config in `package.json`. Build output goes to `release/`, which
+is ignored by git.
+
+```bash
+npm install
+npm test
+npm run check
+npm run build:unpacked
+npm run dist:linux
+```
+
+Build scripts:
+
+- `npm run build:unpacked` — creates `release/linux-unpacked/` on Linux
+  for quick local verification without an installer.
+- `npm run dist:linux` — creates Linux distributables, currently AppImage
+  and deb packages.
+- `npm run dist:mac` — macOS dmg/zip config placeholder; build on macOS,
+  then add signing/notarization before public release.
+- `npm run dist:win` — Windows nsis/zip config placeholder; build on
+  Windows, then add code signing before public release.
+
+Expected artifacts use the pattern `Kloppy-<version>-<os>-<arch>.<ext>`,
+for example `Kloppy-0.0.1-linux-x86_64.AppImage` and
+`Kloppy-0.0.1-linux-amd64.deb`. Unpacked builds live in
+`release/linux-unpacked/`.
+
+Packaged builds do not bundle the downloaded model, partial downloads,
+or llamafile runtime cache. Those live under Electron `userData`
+(`models/` and `llamafile-runtime/`) after a user explicitly runs setup.
+The packaged app still uses the same `app.getPath('userData')` storage,
+so an empty model path shows first-run setup exactly like the source-run
+app. The single-instance guard remains in `src/main.js` and is preserved
+inside the packaged app.
+
+Manual smoke-test checklist before publishing:
+
+- Launch the unpacked app or Linux artifact on a clean profile.
+- Confirm only one app instance opens; a second launch focuses the first.
+- Confirm Setup appears when `settings.json` has no `modelPath`.
+- Confirm no model download starts until the Download button is pressed.
+- Cancel a model download and confirm the partial file is removed.
+- Save a custom local model path and confirm Chat status changes to ready.
+- Add a note and reminder, quit, relaunch, and confirm both persist.
+- Let a reminder come due and confirm both in-app and OS notifications.
+- Enable Launch minimized, quit, relaunch, and confirm the window starts
+  hidden while the tray remains available.
+- Close the window and confirm Kloppy hides to the tray instead of quitting.
+
+Release-note privacy disclosure:
+
+Kloppy is local-first. The only external network request made by the app
+is the optional first-run download of the pinned recommended llamafile,
+started only after explicit user consent and verified by SHA-256 before
+use. The downloaded model is not included in app artifacts. Chat talks only
+to the local llamafile server on `127.0.0.1`; notes, reminders, settings,
+watched folders, actions, model files, and runtime cache stay in Electron
+`userData`.
 
 ## Local AI chat (llamafile)
 
@@ -207,11 +270,13 @@ Important userData files/directories:
 - [x] Local chat commands for date/time, identity, notes, and reminders
 - [x] Prompt-retrieved local context for notes, reminders, watched folders, and actions
 - [x] Automated regression tests for settings, storage, local chat intents, and setup-state mapping
+- [x] Electron Builder packaging config for unpacked and Linux release artifacts
+- [x] macOS and Windows packaging script/config placeholders
 
 ### Next release priorities
 
-- [ ] Package Linux/macOS/Windows builds
-- [ ] Add a release checklist for signed/notarized downloadable builds
+- [ ] Build, sign, and notarize downloadable macOS releases on macOS
+- [ ] Build and sign downloadable Windows releases on Windows
 - [ ] Improve reminder date parsing beyond simple relative/today/tomorrow/date inputs
 - [ ] Add model setup recovery diagnostics visible in the UI
 
