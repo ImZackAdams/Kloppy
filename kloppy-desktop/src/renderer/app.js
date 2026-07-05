@@ -24,14 +24,6 @@ const panels = {
       <p>Press a button below. Kloppy is waiting. Kloppy is patient.*</p>
       <p class="fine-print">* Kloppy is not patient.</p>`,
   },
-  settings: {
-    title: 'SETTINGS.INI',
-    body: `
-      <label class="fake-option"><input type="checkbox" checked disabled> Allow Kloppy to judge silently</label>
-      <label class="fake-option"><input type="checkbox" checked disabled> Gremlin mode (cannot be disabled)</label>
-      <label class="fake-option"><input type="checkbox" disabled> Respect user's time</label>
-      <p class="fine-print">Settings are decorative. Kloppy does what Kloppy wants.</p>`,
-  },
 };
 
 const statusLines = {
@@ -309,6 +301,102 @@ async function checkDueReminders() {
 setInterval(checkDueReminders, REMINDER_CHECK_MS);
 checkDueReminders(); // catch anything that came due while Kloppy was asleep
 
+// ---- Settings panel ----
+
+let currentSettings = null;
+
+function applyTheme(theme) {
+  // Theme variables live on body[data-theme] in styles.css.
+  document.body.dataset.theme = theme;
+}
+
+// How often Kloppy speaks up on his own, per frequency setting.
+const COMMENTARY_MS = {
+  low: 5 * 60 * 1000,
+  medium: 2 * 60 * 1000,
+  cursed: 45 * 1000,
+};
+
+let commentaryTimer = null;
+
+function setupCommentary() {
+  clearInterval(commentaryTimer);
+  commentaryTimer = null;
+  if (!currentSettings || !currentSettings.randomCommentary) return;
+
+  const delay = COMMENTARY_MS[currentSettings.commentaryFrequency] || COMMENTARY_MS.medium;
+  commentaryTimer = setInterval(() => {
+    // "cursed" frequency also draws from the cursed pool.
+    const pool = currentSettings.commentaryFrequency === 'cursed' ? cursedLines : quips;
+    say(pool[Math.floor(Math.random() * pool.length)]);
+    setStatus('Kloppy commented. Unprompted. As foretold.');
+  }, delay);
+}
+
+async function saveSetting(key, value) {
+  const result = await window.kloppy.settings.update({ [key]: value });
+  if (!result.ok) {
+    setStatus('Kloppy rejected that setting. He has standards, apparently.');
+    return;
+  }
+  currentSettings = result.settings;
+  applyTheme(currentSettings.theme);
+  setupCommentary();
+  setStatus('Setting absorbed. Kloppy adapts. Reluctantly.');
+}
+
+async function openSettings() {
+  panelTitle.textContent = 'SETTINGS.INI';
+  const s = currentSettings;
+  panelBody.innerHTML = `
+    <label class="fake-option">
+      <input type="checkbox" id="set-launch-min"> Launch minimized
+      <span class="fine-print">(stored now, honored in a future version)</span>
+    </label>
+    <label class="fake-option">
+      <input type="checkbox" id="set-commentary"> Random commentary while the app is open
+    </label>
+    <label class="fake-option">Commentary frequency
+      <select id="set-frequency">
+        <option value="low">low</option>
+        <option value="medium">medium</option>
+        <option value="cursed">cursed</option>
+      </select>
+    </label>
+    <label class="fake-option">Theme
+      <select id="set-theme">
+        <option value="midnight">midnight</option>
+        <option value="beige">beige</option>
+        <option value="toxic">toxic green</option>
+      </select>
+    </label>
+    <p class="fine-print">Saved instantly to settings.json. Kloppy pretends not to care.</p>`;
+
+  const launchMin = document.getElementById('set-launch-min');
+  const commentary = document.getElementById('set-commentary');
+  const frequency = document.getElementById('set-frequency');
+  const theme = document.getElementById('set-theme');
+
+  launchMin.checked = s.launchMinimized;
+  commentary.checked = s.randomCommentary;
+  frequency.value = s.commentaryFrequency;
+  theme.value = s.theme;
+
+  launchMin.addEventListener('change', () => saveSetting('launchMinimized', launchMin.checked));
+  commentary.addEventListener('change', () => saveSetting('randomCommentary', commentary.checked));
+  frequency.addEventListener('change', () => saveSetting('commentaryFrequency', frequency.value));
+  theme.addEventListener('change', () => saveSetting('theme', theme.value));
+}
+
+async function loadSettings() {
+  const result = await window.kloppy.settings.get();
+  currentSettings = result.settings;
+  applyTheme(currentSettings.theme);
+  setupCommentary();
+}
+
+loadSettings();
+
 // ---- Cursed remarks (triggered from the tray menu) ----
 
 const cursedLines = [
@@ -346,9 +434,9 @@ document.getElementById('btn-reminder').addEventListener('click', () => {
 });
 
 document.getElementById('btn-settings').addEventListener('click', () => {
-  showPanel('settings');
-  say('You can look at the settings. Looking is free.');
+  say('You can touch the settings now. Gently.');
   setStatus(statusLines.settings);
+  openSettings();
 });
 
 document.getElementById('btn-summon').addEventListener('click', () => {

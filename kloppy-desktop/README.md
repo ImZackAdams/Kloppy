@@ -63,6 +63,17 @@ Tray menu:
   main window (visible next time you show it, if it's hidden)
 - **Quit** — actually exits. The only way out.
 
+## Settings
+
+The Settings panel is stored in `settings.json` (same userData folder)
+and applies instantly:
+
+- **Launch minimized** — stored now, honored in a future version
+- **Random commentary** — whether Kloppy occasionally pipes up on his own
+- **Commentary frequency** — low / medium / cursed (cursed is more
+  frequent and draws from the cursed remark pool)
+- **Theme** — midnight (default), beige, or toxic green
+
 ## Summon popup
 
 "Summon Kloppy" (main window button or tray menu) opens a small

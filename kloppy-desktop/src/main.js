@@ -5,6 +5,7 @@ const { app, BrowserWindow, Menu, Tray, ipcMain, screen } = require('electron');
 const path = require('path');
 const notes = require('./notes');
 const reminders = require('./reminders');
+const settings = require('./settings');
 const { createTrayIcon } = require('./tray-icon');
 
 // Keep module-level references: if the window or tray object gets
@@ -122,6 +123,7 @@ app.whenReady().then(() => {
   // Storage lives next to the app's other user data.
   notes.init(app.getPath('userData'));
   reminders.init(app.getPath('userData'));
+  settings.init(app.getPath('userData'));
 
   // IPC endpoints the preload bridge is allowed to call.
   ipcMain.handle('notes:list', () => notes.list());
@@ -137,6 +139,9 @@ app.whenReady().then(() => {
     summonKloppy();
     return { ok: true };
   });
+
+  ipcMain.handle('settings:get', () => settings.get());
+  ipcMain.handle('settings:update', (_event, partial) => settings.update(partial));
 
   createWindow();
   createTray();

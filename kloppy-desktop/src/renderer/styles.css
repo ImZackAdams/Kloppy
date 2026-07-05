@@ -23,6 +23,27 @@
   border-color: var(--bevel-dark) var(--bevel-light) var(--bevel-light) var(--bevel-dark);
 }
 
+/* Themes: settings swap these by putting data-theme on <body>.
+   "midnight" is the default palette from :root. */
+body[data-theme="beige"] {
+  --desktop: #8a8062;
+  --chassis: #d9d0bc;
+  --bevel-dark: #7d7460;
+  --title-grad-a: #5c5230;
+  --title-grad-b: #94804a;
+  --paper: #f8f3e3;
+}
+
+body[data-theme="toxic"] {
+  --desktop: #0c2a0c;
+  --chassis: #a8d8a8;
+  --bevel-dark: #4c7a4c;
+  --ink: #0c260c;
+  --title-grad-a: #114d11;
+  --title-grad-b: #3fa03f;
+  --paper: #ecffec;
+}
+
 * { box-sizing: border-box; }
 
 body {
