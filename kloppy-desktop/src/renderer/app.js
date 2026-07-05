@@ -641,6 +641,7 @@ function brainNote() {
       crashed: 'My brain process crashed. Send a message to revive it.',
       'no-response': 'The model started but never woke up. Try again, or use a smaller model.',
       'no-port': 'No free localhost port found. Genuinely impressive.',
+      'crash-loop': 'The model keeps crashing, so I stopped relaunching it. Re-save the model path in Settings to try again.',
     };
     if (llmStatus.detail && llmStatus.detail.startsWith('http-')) {
       return 'Model download failed on the server side. Setup can retry.';
@@ -754,6 +755,7 @@ function startFailedLine(detail) {
     crashed: 'The model process exited during startup. Kloppy has filed a complaint with physics.',
     'no-response': 'The model started but never answered health checks. Try again, or use a smaller model.',
     'no-port': 'No free localhost port found. Impressive, but not helpful.',
+    'crash-loop': 'That model keeps dying on startup, so I stopped poking it. Re-save the model path in Settings to try again.',
   };
   return lines[detail] || 'I tried to wake my brain and it refused. Check the note above, then try again.';
 }

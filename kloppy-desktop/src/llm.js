@@ -14,7 +14,13 @@ const path = require('path');
 
 const STARTUP_TIMEOUT_MS = 90 * 1000; // big models take a while to load
 const HEALTH_POLL_MS = 500;
-const REPLY_TIMEOUT_MS = 120 * 1000;
+const REPLY_TIMEOUT_MS = 180 * 1000; // 500 tokens on a slow everyday CPU can take minutes
+const HEALTH_CHECK_TIMEOUT_MS = 3 * 1000;
+const IDLE_STOP_MS = 20 * 60 * 1000; // reclaim the model's RAM when chat goes quiet
+const CONTEXT_TOKENS = 8192;     // bounded KV cache; llamafile's default (0) means "model max", which can be enormous
+const CACHE_REUSE_TOKENS = 256;  // min chunk the server may shift-reuse from the prompt cache
+const MAX_CONSECUTIVE_START_FAILURES = 3;
+const SERVER_LOG_MAX_BYTES = 512 * 1024;
 const MAX_PROMPT_LENGTH = 2000;
 const MAX_REPLY_TOKENS = 500;
 const MAX_CONTEXT_ITEMS = 8;
@@ -49,6 +55,11 @@ let port = null;
 let startPromise = null; // shared by concurrent asks so we spawn only once
 let askInFlight = false;
 let stopping = false;    // suppresses the exit handler during deliberate kills
+let launching = false;   // suppresses "crashed" while the startup ladder is still trying
+let argsProfile = null;  // launch profile that last produced a healthy server
+let profilePath = null;  // model path that profile was proven against
+let startFailures = 0;   // consecutive failed start() ladders; gates the crash-loop brake
+let idleTimer = null;    // pending idle shutdown, if any
 let pendingAction = null; // multi-turn local command, e.g. "Make a note" -> content next
 
 // Internal runtime state: not-configured | idle | starting | ready | error
@@ -66,6 +77,9 @@ function init(options) {
   broadcast = options.broadcast;
   pendingAction = null;
   askInFlight = false;
+  argsProfile = null;
+  profilePath = null;
+  startFailures = 0;
   refreshStatus();
 }
 
@@ -100,6 +114,7 @@ function setStatus(state, detail = '') {
 // Recompute the resting status (used at init and after settings changes,
 // so the renderer never shows "not configured" when a path exists).
 function refreshStatus() {
+  startFailures = 0; // a settings change is the user's "try again" signal
   if (!(child || startPromise)) {
     status = { state: getModelPath() ? 'idle' : 'not-configured', detail: '' };
   }
@@ -124,6 +139,67 @@ function findFreePort() {
 
 function baseUrl() {
   return `http://127.0.0.1:${port}`;
+}
+
+// Launch profiles, tried in order until one yields a healthy server:
+//   tuned      — performance flags, GPU offload if the machine has one
+//   tuned-cpu  — same flags but GPU disabled, for broken drivers / low VRAM
+//   minimal    — bare flags every llamafile release understands, so a
+//                user-supplied older binary still works
+const ARG_PROFILES = ['tuned', 'tuned-cpu', 'minimal'];
+
+function buildServerArgs(profile, serverPort) {
+  const args = ['--server', '--host', '127.0.0.1', '--port', String(serverPort)];
+  if (profile === 'minimal') return args;
+  args.push(
+    '--no-webui',                          // API only; keep the bundled web UI off localhost
+    '--parallel', '1',                     // one chat slot gets the whole context window
+    '--ctx-size', String(CONTEXT_TOKENS),
+    '--cache-reuse', String(CACHE_REUSE_TOKENS),
+  );
+  if (profile === 'tuned-cpu') args.push('--gpu', 'disable');
+  return args;
+}
+
+function serverLogPath() {
+  const runtimeDir = getLlamafileHomeDir ? getLlamafileHomeDir() : null;
+  return runtimeDir ? path.join(runtimeDir, 'server.log') : null;
+}
+
+// Keeps the server's output for post-mortems (truncated per launch, capped
+// in size) instead of throwing it away. Failing to log never blocks the
+// server, but the pipes must always be drained.
+function attachServerLog(proc, args) {
+  const drain = () => {
+    if (proc.stdout) proc.stdout.resume();
+    if (proc.stderr) proc.stderr.resume();
+  };
+  const logPath = serverLogPath();
+  if (!logPath) {
+    drain();
+    return;
+  }
+
+  let stream;
+  try {
+    fs.mkdirSync(path.dirname(logPath), { recursive: true });
+    stream = fs.createWriteStream(logPath, { flags: 'w' });
+  } catch {
+    drain();
+    return;
+  }
+
+  stream.on('error', drain);
+  let written = 0;
+  const write = (chunk) => {
+    if (written >= SERVER_LOG_MAX_BYTES) return;
+    written += chunk.length;
+    stream.write(chunk);
+  };
+  stream.write(`[kloppy] launch: ${args.join(' ')}\n`);
+  if (proc.stdout) proc.stdout.on('data', write);
+  if (proc.stderr) proc.stderr.on('data', write);
+  proc.once('close', () => stream.end());
 }
 
 function childEnv() {
@@ -212,10 +288,6 @@ function contextLines(prompt = '') {
   const context = safeContext();
   const userName = normalizeText(context.profile?.userName || '');
   const lines = [
-    `Current local date: ${date}`,
-    `Current local time: ${time}`,
-    `Current year: ${year}`,
-    `Current ISO timestamp: ${iso}`,
     userName
       ? `User profile: user's name is ${userName}. Kloppy is the assistant, not the user.`
       : 'User profile: name is not known yet. Ask the user to say "my name is ..." if needed.',
@@ -248,6 +320,16 @@ function contextLines(prompt = '') {
   lines.push(actions.length === 0
     ? 'Saved actions: none.'
     : `Saved actions: ${actions.map((a, i) => `${i + 1}. ${truncate(a.name)} (${truncate(a.description || 'no description')})`).join(' | ')}`);
+
+  // The clock goes last: everything above changes rarely, so the server can
+  // reuse its cached prompt prefix between asks. A timestamp at the top
+  // would invalidate the whole cache on every message.
+  lines.push(
+    `Current local date: ${date}`,
+    `Current local time: ${time}`,
+    `Current year: ${year}`,
+    `Current ISO timestamp: ${iso}`,
+  );
 
   return lines;
 }
@@ -590,6 +672,60 @@ async function waitForHealthy(proc) {
   return false;
 }
 
+// One launch attempt with one profile. Returns null on success, or a
+// machine-readable failure reason. Does not touch the public status so the
+// ladder in start() can keep showing "starting" between attempts.
+async function startWithProfile(modelPath, profile) {
+  try {
+    port = await findFreePort();
+  } catch {
+    return 'no-port';
+  }
+
+  const args = buildServerArgs(profile, port);
+  try {
+    child = spawn(modelPath, args, {
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,
+      env: childEnv(),
+    });
+  } catch {
+    child = null;
+    return 'spawn-failed';
+  }
+  runningPath = modelPath;
+  attachServerLog(child, args);
+
+  let spawnFailed = false;
+  const proc = child;
+  proc.once('error', () => {
+    if (proc === child) {
+      child = null;
+      spawnFailed = true;
+    }
+  });
+  proc.once('exit', () => {
+    if (proc !== child) return;
+    child = null;
+    // Deliberate stop() and failed launch attempts are not runtime crashes;
+    // anything else means it died under us (or the "llamafile" wasn't one).
+    if (!stopping && !launching) setStatus('error', 'crashed');
+  });
+
+  const healthy = await waitForHealthy(proc);
+  if (!healthy) {
+    if (proc === child) {
+      stopping = true;
+      proc.kill();
+      child = null;
+      stopping = false;
+      return 'no-response'; // process alive but never answered health checks
+    }
+    return spawnFailed ? 'spawn-failed' : 'crashed'; // exited while loading
+  }
+  return null;
+}
+
 async function start() {
   const modelPath = getModelPath();
   if (!modelPath) {
@@ -601,58 +737,43 @@ async function start() {
     return false;
   }
 
+  if (modelPath !== profilePath) {
+    // Different model file: forget what we learned about the previous one.
+    profilePath = modelPath;
+    argsProfile = null;
+    startFailures = 0;
+  }
+  if (startFailures >= MAX_CONSECUTIVE_START_FAILURES) {
+    // Crash-loop brake: stop respawning a server that keeps dying. Changing
+    // any setting (refreshStatus) arms it again.
+    setStatus('error', 'crash-loop');
+    return false;
+  }
+
   setStatus('starting');
+  launching = true;
+  let reason = 'no-response';
   try {
-    port = await findFreePort();
-  } catch {
-    setStatus('error', 'no-port');
-    return false;
+    // A proven profile is retried alone; otherwise walk the ladder.
+    const profiles = argsProfile ? [argsProfile] : ARG_PROFILES;
+    for (const profile of profiles) {
+      reason = await startWithProfile(modelPath, profile);
+      if (reason === null) {
+        argsProfile = profile;
+        startFailures = 0;
+        setStatus('ready');
+        return true;
+      }
+      if (reason === 'no-port') break; // not the flags' fault; retrying won't help
+    }
+  } finally {
+    launching = false;
   }
 
-  const args = ['--server', '--host', '127.0.0.1', '--port', String(port)];
-  try {
-    child = spawn(modelPath, args, {
-      stdio: 'ignore',
-      windowsHide: true,
-      env: childEnv(),
-    });
-  } catch {
-    child = null;
-    setStatus('error', 'spawn-failed');
-    return false;
-  }
-  runningPath = modelPath;
-
-  const proc = child;
-  proc.once('error', () => {
-    if (proc === child) {
-      child = null;
-      setStatus('error', 'spawn-failed');
-    }
-  });
-  proc.once('exit', () => {
-    if (proc === child) {
-      child = null;
-      // Deliberate stop() is not an error; anything else means it crashed
-      // (or the "llamafile" wasn't one).
-      if (!stopping) setStatus('error', 'crashed');
-    }
-  });
-
-  const healthy = await waitForHealthy(proc);
-  if (!healthy) {
-    if (proc === child) {
-      stopping = true;
-      proc.kill();
-      child = null;
-      stopping = false;
-      setStatus('error', 'no-response');
-    }
-    return false;
-  }
-
-  setStatus('ready');
-  return true;
+  startFailures += 1;
+  setStatus('error',
+    startFailures >= MAX_CONSECUTIVE_START_FAILURES ? 'crash-loop' : reason);
+  return false;
 }
 
 // Ensures a healthy server for the currently-configured model path.
@@ -668,6 +789,53 @@ async function ensureReady() {
     });
   }
   return startPromise;
+}
+
+function clearIdleStop() {
+  if (idleTimer) {
+    clearTimeout(idleTimer);
+    idleTimer = null;
+  }
+}
+
+// A model server holds the whole model in memory (roughly its file size).
+// After a quiet spell it is shut down; the next ask relaunches it
+// transparently, trading a few seconds of load time for gigabytes of RAM
+// the rest of the desktop can use.
+function scheduleIdleStop() {
+  clearIdleStop();
+  if (!child) return;
+  idleTimer = setTimeout(() => {
+    idleTimer = null;
+    if (askInFlight || !child) return;
+    stop().then(() => refreshStatus());
+  }, IDLE_STOP_MS);
+  if (typeof idleTimer.unref === 'function') idleTimer.unref();
+}
+
+async function serverAlive() {
+  try {
+    const res = await fetch(`${baseUrl()}/health`, {
+      signal: AbortSignal.timeout(HEALTH_CHECK_TIMEOUT_MS),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+// Pulls the user-visible reply out of a chat completion. Thinking models
+// can put their scratchpad in reasoning_content (ignored) or leak it into
+// content as <think> tags (stripped); an unclosed tag means the model spent
+// its whole token budget thinking and never answered.
+function extractReply(data) {
+  const content = data?.choices?.[0]?.message?.content;
+  if (typeof content !== 'string') return null;
+  const reply = content
+    .replace(/<think>[\s\S]*?<\/think>/g, '')
+    .replace(/<think>[\s\S]*$/, '')
+    .trim();
+  return reply.length > 0 ? reply : null;
 }
 
 async function ask(prompt, history = []) {
@@ -686,58 +854,78 @@ async function ask(prompt, history = []) {
 
   askInFlight = true;
   try {
-    const ready = await ensureReady();
-    if (!ready) {
-      // status already says why (not-configured / model-missing / ...)
-      return {
-        ok: false,
-        error: status.state === 'not-configured' ? 'not-configured' : 'start-failed',
-        detail: status.detail,
-      };
-    }
+    // Two passes: if the server turns out to be dead or wedged on the first,
+    // it is stopped and relaunched once before giving up.
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const ready = await ensureReady();
+      if (!ready) {
+        // status already says why (not-configured / model-missing / ...)
+        return {
+          ok: false,
+          error: status.state === 'not-configured' ? 'not-configured' : 'start-failed',
+          detail: status.detail,
+        };
+      }
 
-    let res;
-    try {
-      res = await fetch(`${baseUrl()}/v1/chat/completions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: AbortSignal.timeout(REPLY_TIMEOUT_MS),
-        body: JSON.stringify({
-          model: 'local', // llamafile serves exactly one model; name is ignored
-          messages: [
-            { role: 'system', content: buildSystemPrompt(prompt) },
-            ...sanitizeHistory(history),
-            { role: 'user', content: prompt.trim() },
-          ],
-          max_tokens: MAX_REPLY_TOKENS,
-          temperature: 0.7,
-        }),
-      });
-    } catch {
-      return { ok: false, error: 'request-failed' };
-    }
-    if (!res.ok) {
-      return { ok: false, error: 'request-failed' };
-    }
+      if (!(await serverAlive())) {
+        await stop(); // wedged or silently dead; costs ~ms when healthy
+        continue;
+      }
 
-    let reply;
-    try {
-      const data = await res.json();
-      reply = data.choices?.[0]?.message?.content;
-    } catch {
-      reply = null;
+      let res;
+      try {
+        res = await fetch(`${baseUrl()}/v1/chat/completions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: AbortSignal.timeout(REPLY_TIMEOUT_MS),
+          body: JSON.stringify({
+            model: 'local', // llamafile serves exactly one model; name is ignored
+            messages: [
+              { role: 'system', content: buildSystemPrompt(prompt) },
+              ...sanitizeHistory(history),
+              { role: 'user', content: prompt.trim() },
+            ],
+            max_tokens: MAX_REPLY_TOKENS,
+            temperature: 0.7,
+            top_p: 0.9,
+            min_p: 0.05,        // keeps small quantized models off garbage tokens
+            cache_prompt: true, // reuse the system-prompt KV between asks
+          }),
+        });
+      } catch {
+        if (!child || child.exitCode !== null) {
+          await stop(); // server died mid-request — relaunch and retry once
+          continue;
+        }
+        return { ok: false, error: 'request-failed' };
+      }
+      if (!res.ok) {
+        return { ok: false, error: 'request-failed' };
+      }
+
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        data = null;
+      }
+      const reply = extractReply(data);
+      if (!reply) {
+        return { ok: false, error: 'bad-reply' };
+      }
+      return { ok: true, reply };
     }
-    if (typeof reply !== 'string' || reply.trim().length === 0) {
-      return { ok: false, error: 'bad-reply' };
-    }
-    return { ok: true, reply: reply.trim() };
+    return { ok: false, error: 'request-failed' };
   } finally {
     askInFlight = false;
+    scheduleIdleStop();
   }
 }
 
-// Kills the server. Called on app quit and when the model path changes.
+// Kills the server. Called on app quit, when the model path changes, and
+// by the idle-stop timer.
 function stop() {
+  clearIdleStop();
   return new Promise((resolve) => {
     if (!child) {
       resolve();
@@ -759,4 +947,4 @@ function stop() {
   });
 }
 
-module.exports = { init, getStatus, ask, stop, refreshStatus };
+module.exports = { init, getStatus, ask, stop, refreshStatus, buildServerArgs, extractReply };
