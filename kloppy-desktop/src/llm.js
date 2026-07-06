@@ -14,7 +14,7 @@ const path = require('path');
 
 const STARTUP_TIMEOUT_MS = 90 * 1000; // big models take a while to load
 const HEALTH_POLL_MS = 500;
-const REPLY_TIMEOUT_MS = 180 * 1000; // 500 tokens on a slow everyday CPU can take minutes
+const REPLY_TIMEOUT_MS = 180 * 1000; // max silence between stream chunks; re-armed on every chunk
 const HEALTH_CHECK_TIMEOUT_MS = 3 * 1000;
 const IDLE_STOP_MS = 20 * 60 * 1000; // reclaim the model's RAM when chat goes quiet
 const CONTEXT_TOKENS = 8192;     // bounded KV cache; llamafile's default (0) means "model max", which can be enormous
@@ -824,21 +824,28 @@ async function serverAlive() {
   }
 }
 
-// Pulls the user-visible reply out of a chat completion. Thinking models
-// can put their scratchpad in reasoning_content (ignored) or leak it into
-// content as <think> tags (stripped); an unclosed tag means the model spent
-// its whole token budget thinking and never answered.
+// Thinking models can put their scratchpad in reasoning_content (ignored)
+// or leak it into content as <think> tags (stripped); an unclosed tag means
+// the model spent its whole token budget thinking and never answered.
+function stripThink(content) {
+  return String(content)
+    .replace(/<think>[\s\S]*?<\/think>/g, '')
+    .replace(/<think>[\s\S]*$/, '');
+}
+
+// Pulls the user-visible reply out of a non-streaming chat completion.
 function extractReply(data) {
   const content = data?.choices?.[0]?.message?.content;
   if (typeof content !== 'string') return null;
-  const reply = content
-    .replace(/<think>[\s\S]*?<\/think>/g, '')
-    .replace(/<think>[\s\S]*$/, '')
-    .trim();
+  const reply = stripThink(content).trim();
   return reply.length > 0 ? reply : null;
 }
 
-async function ask(prompt, history = []) {
+// onToken, when given, is called with each visible chunk of the reply as it
+// streams in (main.js forwards them to the renderer). The resolved value is
+// still the final full reply either way.
+async function ask(prompt, history = [], onToken = null) {
+  const emit = typeof onToken === 'function' ? onToken : null;
   if (typeof prompt !== 'string' || prompt.trim().length === 0) {
     return { ok: false, error: 'empty' };
   }
@@ -872,12 +879,23 @@ async function ask(prompt, history = []) {
         continue;
       }
 
+      // Streamed completion: the reply timeout is re-armed on every chunk,
+      // so it bounds silence, not total generation time — a slow-but-alive
+      // CPU generation no longer dies at the 180s mark.
+      const controller = new AbortController();
+      let replyTimer = null;
+      const armReplyTimer = () => {
+        clearTimeout(replyTimer);
+        replyTimer = setTimeout(() => controller.abort(), REPLY_TIMEOUT_MS);
+      };
+      armReplyTimer();
+
       let res;
       try {
         res = await fetch(`${baseUrl()}/v1/chat/completions`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          signal: AbortSignal.timeout(REPLY_TIMEOUT_MS),
+          signal: controller.signal,
           body: JSON.stringify({
             model: 'local', // llamafile serves exactly one model; name is ignored
             messages: [
@@ -890,9 +908,11 @@ async function ask(prompt, history = []) {
             top_p: 0.9,
             min_p: 0.05,        // keeps small quantized models off garbage tokens
             cache_prompt: true, // reuse the system-prompt KV between asks
+            stream: true,
           }),
         });
       } catch {
+        clearTimeout(replyTimer);
         if (!child || child.exitCode !== null) {
           await stop(); // server died mid-request — relaunch and retry once
           continue;
@@ -900,16 +920,73 @@ async function ask(prompt, history = []) {
         return { ok: false, error: 'request-failed' };
       }
       if (!res.ok) {
+        clearTimeout(replyTimer);
         return { ok: false, error: 'request-failed' };
       }
 
-      let data;
+      let raw = '';         // everything the model said, think tags included
+      let sentVisible = ''; // what has already been forwarded to the renderer
+      const pushDelta = (delta) => {
+        raw += delta;
+        if (!emit) return;
+        // Forward only text that survives think-stripping, and only as a
+        // pure extension of what was already sent (never a retraction).
+        const visible = stripThink(raw).trimStart();
+        if (visible.length > sentVisible.length && visible.startsWith(sentVisible)) {
+          emit(visible.slice(sentVisible.length));
+          sentVisible = visible;
+        }
+      };
+
+      let bodyText = ''; // whole body, kept for servers that ignore stream:true
       try {
-        data = await res.json();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        for await (const part of res.body) {
+          armReplyTimer(); // any progress proves the server is still alive
+          const text = decoder.decode(part, { stream: true });
+          bodyText += text;
+          buffer += text;
+          let newline;
+          while ((newline = buffer.indexOf('\n')) !== -1) {
+            const line = buffer.slice(0, newline).replace(/\r$/, '');
+            buffer = buffer.slice(newline + 1);
+            if (!line.startsWith('data:')) continue;
+            const payload = line.slice(5).trim();
+            if (payload === '[DONE]') continue;
+            let data;
+            try {
+              data = JSON.parse(payload);
+            } catch {
+              continue;
+            }
+            const delta = data?.choices?.[0]?.delta?.content;
+            if (typeof delta === 'string' && delta.length > 0) pushDelta(delta);
+          }
+        }
       } catch {
-        data = null;
+        clearTimeout(replyTimer);
+        // The stream died (or the silence timeout fired) mid-reply. Once
+        // tokens have reached the renderer, a relaunch-and-retry would
+        // duplicate them, so only retry when nothing was streamed yet.
+        if (!sentVisible && (!child || child.exitCode !== null)) {
+          await stop();
+          continue;
+        }
+        return { ok: false, error: 'request-failed' };
       }
-      const reply = extractReply(data);
+      clearTimeout(replyTimer);
+
+      let reply = stripThink(raw).trim();
+      if (!reply && !raw) {
+        // No SSE data at all: an older llamafile may have ignored
+        // stream:true and answered with one plain JSON completion.
+        try {
+          reply = extractReply(JSON.parse(bodyText)) || '';
+        } catch {
+          reply = '';
+        }
+      }
       if (!reply) {
         return { ok: false, error: 'bad-reply' };
       }

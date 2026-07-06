@@ -30,11 +30,13 @@ contextBridge.exposeInMainWorld('kloppy', {
   },
   llm: {
     status: () => ipcRenderer.invoke('llm:status'),
-    ask: (prompt, history) => ipcRenderer.invoke('llm:ask', prompt, history),
+    ask: (prompt, history, requestId) => ipcRenderer.invoke('llm:ask', prompt, history, requestId),
     setupInfo: () => ipcRenderer.invoke('llm:setup-info'),
     downloadDefault: () => ipcRenderer.invoke('llm:download-default'),
     cancelDownload: () => ipcRenderer.invoke('llm:cancel-download'),
     onStatus: (callback) => ipcRenderer.on('llm:status', (_event, status) => callback(status)),
+    // Streamed reply tokens: { id, delta } pairs for an in-flight ask.
+    onChunk: (callback) => ipcRenderer.on('llm:chunk', (_event, chunk) => callback(chunk)),
   },
   watcher: {
     list: () => ipcRenderer.invoke('watcher:list'),

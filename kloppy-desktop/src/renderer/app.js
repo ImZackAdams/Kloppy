@@ -696,6 +696,43 @@ function appendChat(who, text) {
   log.scrollTop = log.scrollHeight;
 }
 
+// ---- Streamed replies ----
+// The one in-flight streamed reply, if any. Tokens pushed from the main
+// process land in its message object, so the transcript stays correct even
+// if the user switches panels mid-generation.
+let activeStream = null; // { id, msg, textEl }
+
+function renderStreamText() {
+  if (!activeStream) return;
+  const { msg, textEl } = activeStream;
+  if (!textEl || !textEl.isConnected) return; // chat panel not on screen
+  textEl.textContent = ' ' + (msg.text || '...');
+  const log = document.getElementById('chat-log');
+  if (log) log.scrollTop = log.scrollHeight;
+}
+
+// Creates the assistant bubble immediately; tokens fill it as they arrive.
+function beginStreamedReply(id) {
+  const msg = { who: 'kloppy', text: '' };
+  chatMessages.push(msg);
+  let textEl = null;
+  const log = document.getElementById('chat-log');
+  if (log) {
+    const li = chatLine(msg);
+    textEl = li.lastChild;
+    log.appendChild(li);
+  }
+  activeStream = { id, msg, textEl };
+  renderStreamText();
+}
+
+window.kloppy.llm.onChunk((chunk) => {
+  if (!activeStream || !chunk || chunk.id !== activeStream.id) return;
+  if (typeof chunk.delta !== 'string') return;
+  activeStream.msg.text += chunk.delta;
+  renderStreamText();
+});
+
 function chatLine(msg) {
   // Built with createElement + textContent so neither user input nor model
   // output is ever interpreted as HTML.
@@ -738,6 +775,16 @@ async function openChat() {
   for (const msg of chatMessages) log.appendChild(chatLine(msg));
   log.scrollTop = log.scrollHeight;
 
+  // Coming back mid-generation: point the live stream at the freshly
+  // rebuilt bubble so tokens keep appearing.
+  if (activeStream) {
+    const index = chatMessages.indexOf(activeStream.msg);
+    if (index >= 0) {
+      activeStream.textEl = log.children[index].lastChild;
+      renderStreamText();
+    }
+  }
+
   const result = await window.kloppy.llm.status();
   llmStatus = result.status;
   updateChatNote();
@@ -775,6 +822,13 @@ async function sendChat() {
     return;
   }
 
+  if (activeStream) {
+    // Enter can still fire while the button is disabled; don't disturb the
+    // reply that is already streaming in.
+    say(askErrorLines.busy);
+    return;
+  }
+
   const history = chatMessages.slice(-8);
   appendChat('you', text);
   input.value = '';
@@ -782,21 +836,48 @@ async function sendChat() {
   say('Thinking. With my real brain. Listen to those fans.');
   setStatus('Kloppy is consulting the model. Locally. Menacingly.');
 
-  const result = await window.kloppy.llm.ask(text, history);
+  const requestId = `ask-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+  beginStreamedReply(requestId);
+
+  const result = await window.kloppy.llm.ask(text, history, requestId);
+
+  const stream = activeStream;
+  activeStream = null;
 
   // The user may have switched panels while the model was thinking.
   const btnNow = document.getElementById('chat-send');
   if (btnNow) btnNow.disabled = false;
 
   if (!result.ok) {
-    appendChat('kloppy', result.error === 'start-failed'
+    const line = result.error === 'start-failed'
       ? startFailedLine(result.detail)
-      : askErrorLines[result.error] || 'Something went wrong in there. Try again.');
+      : askErrorLines[result.error] || 'Something went wrong in there. Try again.';
+    if (stream.msg.text) {
+      // Streaming died mid-reply: keep the partial words, mark them.
+      stream.msg.text += ' [interrupted]';
+      if (stream.textEl && stream.textEl.isConnected) {
+        stream.textEl.textContent = ' ' + stream.msg.text;
+      }
+      say(line);
+    } else {
+      // Nothing streamed: drop the empty bubble and show the error instead.
+      const index = chatMessages.indexOf(stream.msg);
+      if (index >= 0) chatMessages.splice(index, 1);
+      if (stream.textEl && stream.textEl.isConnected) {
+        stream.textEl.parentElement.remove();
+      }
+      appendChat('kloppy', line);
+    }
     setStatus('Kloppy brain hiccup. No thoughts were harmed.');
     return;
   }
 
-  appendChat('kloppy', result.reply);
+  // Settle on the final reply: identical to the streamed text in the happy
+  // path, and fills the bubble for local intents, which never stream.
+  stream.msg.text = result.reply;
+  if (stream.textEl && stream.textEl.isConnected) {
+    stream.textEl.textContent = ' ' + stream.msg.text;
+  }
   say('I said words. Real, locally-generated words.');
   setStatus('Kloppy answered with his own brain. A milestone.');
 }

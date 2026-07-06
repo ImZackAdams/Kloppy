@@ -56,6 +56,112 @@ test('extractReply strips leaked thinking scratchpads', () => {
   );
 });
 
+// A fake "llamafile": a Node HTTP server speaking just enough of the
+// OpenAI-compatible API (health checks + streaming chat completions via
+// SSE) to exercise ask() end to end. Behavior is scripted off markers in
+// the user prompt. Rejects requests that forget stream:true.
+const FAKE_SERVER_SOURCE = `#!/usr/bin/env node
+'use strict';
+const http = require('http');
+const port = Number(process.argv[process.argv.indexOf('--port') + 1]);
+
+function sse(res, deltas) {
+  res.writeHead(200, { 'Content-Type': 'text/event-stream' });
+  for (const delta of deltas) {
+    res.write('data: ' + JSON.stringify({ choices: [{ delta: { content: delta } }] }) + '\\n\\n');
+  }
+}
+
+const server = http.createServer((req, res) => {
+  if (req.method === 'GET' && req.url === '/health') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end('{"status":"ok"}');
+    return;
+  }
+  if (req.method === 'POST' && req.url === '/v1/chat/completions') {
+    let body = '';
+    req.on('data', (chunk) => { body += chunk; });
+    req.on('end', () => {
+      const parsed = JSON.parse(body);
+      if (parsed.stream !== true) {
+        res.writeHead(500);
+        res.end();
+        return;
+      }
+      const prompt = parsed.messages[parsed.messages.length - 1].content;
+      if (prompt.includes('DIE-MID-STREAM')) {
+        sse(res, ['Partial ', 'words']);
+        setTimeout(() => res.socket.destroy(), 50); // flush, then cut the wire
+        return;
+      }
+      if (prompt.includes('ONLY-THINK')) {
+        sse(res, ['<think>all scratchpad, no answer']);
+        res.end('data: [DONE]\\n\\n');
+        return;
+      }
+      sse(res, ['<think>plotting</think>', 'Hel', 'lo ', 'there.']);
+      res.end('data: [DONE]\\n\\n');
+    });
+    return;
+  }
+  res.writeHead(404);
+  res.end();
+});
+server.listen(port, '127.0.0.1');
+`;
+
+function startFakeServer(t) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'kloppy-llm-test-'));
+  const fakeModel = path.join(dir, 'fake-server.llamafile');
+  fs.writeFileSync(fakeModel, FAKE_SERVER_SOURCE, { mode: 0o755 });
+  llm.init({
+    getModelPath: () => fakeModel,
+    getSetupStatus: () => null,
+    getLlamafileHomeDir: () => path.join(dir, 'runtime'),
+    getAssistantContext: () => ({}),
+    localActions: {},
+    broadcast: () => {},
+  });
+  t.after(async () => {
+    await llm.stop();
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+}
+
+test('ask streams tokens and resolves with the full reply', async (t) => {
+  startFakeServer(t);
+
+  const chunks = [];
+  const result = await llm.ask('why is the sky blue?', [], (delta) => chunks.push(delta));
+
+  assert.equal(result.ok, true);
+  assert.equal(result.reply, 'Hello there.');
+  assert.ok(chunks.length > 1, 'reply arrived in multiple chunks');
+  assert.equal(chunks.join(''), 'Hello there.', 'streamed chunks add up to the reply, think block stripped');
+});
+
+test('a stream that dies mid-reply keeps the partial and fails without retrying', async (t) => {
+  startFakeServer(t);
+
+  const chunks = [];
+  const result = await llm.ask('please DIE-MID-STREAM', [], (delta) => chunks.push(delta));
+
+  assert.equal(result.ok, false);
+  assert.equal(result.error, 'request-failed', 'existing error shape preserved');
+  assert.equal(chunks.join(''), 'Partial words', 'partial tokens were delivered exactly once');
+});
+
+test('a streamed reply that is all thinking is bad-reply, with nothing forwarded', async (t) => {
+  startFakeServer(t);
+
+  const chunks = [];
+  const result = await llm.ask('please ONLY-THINK', [], (delta) => chunks.push(delta));
+
+  assert.equal(result.ok, false);
+  assert.equal(result.error, 'bad-reply');
+  assert.deepEqual(chunks, [], 'think-only output never reaches the renderer');
+});
+
 test('repeated startup crashes trip the crash-loop brake', async (t) => {
   // A "llamafile" that dies instantly, so every profile in the ladder fails.
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'kloppy-llm-test-'));

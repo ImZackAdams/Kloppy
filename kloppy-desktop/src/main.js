@@ -281,7 +281,21 @@ app.whenReady().then(() => {
     },
   });
   ipcMain.handle('llm:status', () => llm.getStatus());
-  ipcMain.handle('llm:ask', (_event, prompt, history) => llm.ask(prompt, history));
+  ipcMain.handle('llm:ask', (event, prompt, history, requestId) => {
+    // The renderer picks the request id so it can match chunks to the ask;
+    // it is only ever echoed back to the same window. Validate shape anyway.
+    const id = typeof requestId === 'string' && requestId.length > 0 && requestId.length <= 64
+      ? requestId
+      : null;
+    const onToken = id
+      ? (delta) => {
+        if (!event.sender.isDestroyed()) {
+          event.sender.send('llm:chunk', { id, delta });
+        }
+      }
+      : null;
+    return llm.ask(prompt, history, onToken);
+  });
   ipcMain.handle('llm:setup-info', () => modelSetup.getInfo());
   ipcMain.handle('llm:download-default', () => modelSetup.downloadDefault());
   ipcMain.handle('llm:cancel-download', () => modelSetup.cancelDownload());
