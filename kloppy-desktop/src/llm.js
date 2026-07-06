@@ -11,6 +11,7 @@ const { spawn } = require('child_process');
 const fs = require('fs');
 const net = require('net');
 const path = require('path');
+const { promptForMode } = require('./personality');
 
 const STARTUP_TIMEOUT_MS = 90 * 1000; // big models take a while to load
 const HEALTH_POLL_MS = 500;
@@ -35,14 +36,12 @@ const STOP_WORDS = new Set([
 ]);
 
 const SYSTEM_PROMPT =
-  'You are Kloppy, a sardonic but harmless retro desktop assistant gremlin ' +
-  'shaped like a paperclip. You live in the user\'s taskbar. Reply in one to ' +
-  'three short sentences, deadpan and a little unhinged, but always actually ' +
-  'answer the user\'s question or request first. Never use markdown. You are ' +
+  'Reply in one to three short sentences. Never use markdown. You are ' +
   'local-first and offline. If the user asks about app data, use the local ' +
   'context below instead of guessing.';
 
 let getModelPath = null;           // injected by main.js; reads the settings file
+let getPersonalityMode = null;     // injected by main.js; reads the settings file
 let getSetupStatus = null;         // injected by main.js; first-run download state
 let getLlamafileHomeDir = null;    // injected by main.js; keeps runtime files in userData
 let getAssistantContext = null;    // injected by main.js; read-only app context
@@ -70,6 +69,7 @@ let status = { state: 'not-configured', detail: '' };
 
 function init(options) {
   getModelPath = options.getModelPath;
+  getPersonalityMode = options.getPersonalityMode || null;
   getSetupStatus = options.getSetupStatus || null;
   getLlamafileHomeDir = options.getLlamafileHomeDir || null;
   getAssistantContext = options.getAssistantContext || null;
@@ -350,7 +350,8 @@ function contextLines(prompt = '') {
 }
 
 function buildSystemPrompt(prompt) {
-  return `${SYSTEM_PROMPT}\n\nLOCAL CONTEXT:\n${contextLines(prompt).join('\n')}`;
+  const personality = promptForMode(getPersonalityMode ? getPersonalityMode() : null);
+  return `${personality}\n${SYSTEM_PROMPT}\n\nLOCAL CONTEXT:\n${contextLines(prompt).join('\n')}`;
 }
 
 function sanitizeHistory(history) {

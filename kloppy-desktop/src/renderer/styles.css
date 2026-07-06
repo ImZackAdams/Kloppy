@@ -11,6 +11,11 @@
   --title-grad-a: #1b1b6f;     /* fake title bar gradient */
   --title-grad-b: #7a3fa0;
   --paper: #fffdf2;            /* panel + speech bubble background */
+  --muted: #666;
+  --field-bg: #fff;
+  --field-ink: #1a1a1a;
+  --note-bg: #fff;
+  --warning-bg: #fff3a6;
 }
 
 /* Raised and sunken bevels — the two load-bearing walls of 90s UI */
@@ -23,25 +28,19 @@
   border-color: var(--bevel-dark) var(--bevel-light) var(--bevel-light) var(--bevel-dark);
 }
 
-/* Themes: settings swap these by putting data-theme on <body>.
-   "midnight" is the default palette from :root. */
-body[data-theme="beige"] {
-  --desktop: #8a8062;
-  --chassis: #d9d0bc;
-  --bevel-dark: #7d7460;
-  --title-grad-a: #5c5230;
-  --title-grad-b: #94804a;
-  --paper: #f8f3e3;
-}
-
-body[data-theme="toxic"] {
-  --desktop: #0c2a0c;
-  --chassis: #a8d8a8;
-  --bevel-dark: #4c7a4c;
-  --ink: #0c260c;
-  --title-grad-a: #114d11;
-  --title-grad-b: #3fa03f;
-  --paper: #ecffec;
+/* Display modes: settings swap these by putting data-theme on <body>. */
+body[data-theme="dark"] {
+  --desktop: #102c36;
+  --chassis: #303642;
+  --bevel-light: #7d8794;
+  --bevel-dark: #11151c;
+  --ink: #f3f1e8;
+  --title-grad-a: #11175b;
+  --title-grad-b: #5b2f70;
+  --paper: #1e2530;
+  --muted: #c2c8cf;
+  --note-bg: #28313d;
+  --warning-bg: #5d5417;
 }
 
 * { box-sizing: border-box; }
@@ -129,6 +128,7 @@ body {
   font-weight: bold;
   padding: 1px 6px;
   background: #e8e8e8;
+  color: #1a1a1a;
   border: 1px solid var(--ink);
   box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.25);
 }
@@ -230,13 +230,30 @@ body {
 
 .fine-print {
   font-size: 11px;
-  color: #666;
+  color: var(--muted);
 }
 
 .fake-option {
   display: block;
   margin-bottom: 6px;
-  color: #555;
+  color: var(--muted);
+}
+
+.fake-option select {
+  display: block;
+  margin-top: 2px;
+  padding: 2px 4px;
+  font-family: "Courier New", monospace;
+  font-size: 12px;
+  color: var(--field-ink);
+  background: var(--field-bg);
+  border: 2px solid;
+  border-color: var(--bevel-dark) var(--bevel-light) var(--bevel-light) var(--bevel-dark);
+}
+
+.fake-option #personality-description {
+  display: block;
+  margin-top: 2px;
 }
 
 /* ---- Notes ---- */
@@ -256,7 +273,8 @@ body {
   font-family: "Courier New", monospace;
   font-size: 13px;
   resize: vertical;
-  background: #fff;
+  color: var(--field-ink);
+  background: var(--field-bg);
   border: 2px solid;
   border-color: var(--bevel-dark) var(--bevel-light) var(--bevel-light) var(--bevel-dark);
 }
@@ -271,7 +289,8 @@ body {
   padding: 6px;
   font-family: "Courier New", monospace;
   font-size: 13px;
-  background: #fff;
+  color: var(--field-ink);
+  background: var(--field-bg);
   border: 2px solid;
   border-color: var(--bevel-dark) var(--bevel-light) var(--bevel-light) var(--bevel-dark);
 }
@@ -285,7 +304,7 @@ body {
 .note {
   margin-bottom: 8px;
   padding: 6px 8px;
-  background: #fff;
+  background: var(--note-bg);
   border: 1px solid var(--ink);
   box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
 }
@@ -302,7 +321,7 @@ body {
   align-items: center;
   gap: 8px;
   font-size: 11px;
-  color: #666;
+  color: var(--muted);
 }
 
 .note-delete {
@@ -314,7 +333,7 @@ body {
 }
 
 .note-empty {
-  color: #666;
+  color: var(--muted);
   font-style: italic;
 }
 
@@ -348,8 +367,8 @@ body {
   font-family: "Courier New", monospace;
   font-size: 13px;
   resize: vertical;
-  background: #fff;
-  color: var(--ink);
+  background: var(--field-bg);
+  color: var(--field-ink);
   border: 2px solid;
   border-color: var(--bevel-dark) var(--bevel-light) var(--bevel-light) var(--bevel-dark);
 }
@@ -362,7 +381,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: #444;
+  color: var(--muted);
 }
 
 .memory-actions {
@@ -397,7 +416,8 @@ body {
   padding: 2px 4px;
   font-family: "Courier New", monospace;
   font-size: 12px;
-  background: #fff;
+  color: var(--field-ink);
+  background: var(--field-bg);
   border: 2px solid;
   border-color: var(--bevel-dark) var(--bevel-light) var(--bevel-light) var(--bevel-dark);
 }
@@ -416,7 +436,8 @@ body {
   padding: 4px 6px;
   font-family: "Courier New", monospace;
   font-size: 12px;
-  background: #fff;
+  color: var(--field-ink);
+  background: var(--field-bg);
   border: 2px solid;
   border-color: var(--bevel-dark) var(--bevel-light) var(--bevel-light) var(--bevel-dark);
 }
@@ -455,7 +476,8 @@ body {
   padding: 4px 6px;
   font-family: "Courier New", monospace;
   font-size: 12px;
-  background: #fff;
+  color: var(--field-ink);
+  background: var(--field-bg);
   border: 2px solid;
   border-color: var(--bevel-dark) var(--bevel-light) var(--bevel-light) var(--bevel-dark);
 }
@@ -486,7 +508,7 @@ body {
 
 .setup-warning {
   padding: 6px 8px;
-  background: #fff3a6;
+  background: var(--warning-bg);
   border: 1px solid var(--ink);
   font-weight: bold;
 }
@@ -532,7 +554,8 @@ body {
   padding: 6px;
   font-family: "Courier New", monospace;
   font-size: 13px;
-  background: #fff;
+  color: var(--field-ink);
+  background: var(--field-bg);
   border: 2px solid;
   border-color: var(--bevel-dark) var(--bevel-light) var(--bevel-light) var(--bevel-dark);
 }
@@ -546,7 +569,7 @@ body {
   font-family: "Courier New", monospace;
   font-size: 11px;
   letter-spacing: 1px;
-  color: #444;
+  color: var(--muted);
 }
 
 .note.done { opacity: 0.65; }

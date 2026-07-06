@@ -22,7 +22,8 @@ test('settings validates, trims, and persists supported values', (t) => {
     launchMinimized: false,
     randomCommentary: true,
     commentaryFrequency: 'medium',
-    theme: 'midnight',
+    theme: 'dark',
+    personalityMode: 'goblin',
     modelPath: '',
     userName: '',
   });
@@ -31,7 +32,8 @@ test('settings validates, trims, and persists supported values', (t) => {
     launchMinimized: true,
     randomCommentary: false,
     commentaryFrequency: 'cursed',
-    theme: 'toxic',
+    theme: 'light',
+    personalityMode: 'quiet',
     modelPath: '  /tmp/brain.llamafile  ',
     userName: '  Zack  ',
   });
@@ -40,7 +42,8 @@ test('settings validates, trims, and persists supported values', (t) => {
   assert.equal(result.settings.launchMinimized, true);
   assert.equal(result.settings.randomCommentary, false);
   assert.equal(result.settings.commentaryFrequency, 'cursed');
-  assert.equal(result.settings.theme, 'toxic');
+  assert.equal(result.settings.theme, 'light');
+  assert.equal(result.settings.personalityMode, 'quiet');
   assert.equal(result.settings.modelPath, '/tmp/brain.llamafile');
   assert.equal(result.settings.userName, 'Zack');
 
@@ -53,10 +56,16 @@ test('settings rejects invalid updates without saving partial changes', (t) => {
   const dir = tempUserData(t);
   settings.init(dir);
 
-  assert.equal(settings.update({ theme: 'beige', userName: 'Ada' }).ok, true);
+  assert.equal(settings.update({ theme: 'light', personalityMode: 'helpful', userName: 'Ada' }).ok, true);
 
   assert.deepEqual(settings.update({ theme: 'neon' }), { ok: false, error: 'invalid' });
-  assert.equal(settings.get().settings.theme, 'beige');
+  assert.equal(settings.get().settings.theme, 'light');
+
+  assert.deepEqual(settings.update({ personalityMode: 'feral' }), {
+    ok: false,
+    error: 'invalid',
+  });
+  assert.equal(settings.get().settings.personalityMode, 'helpful');
 
   assert.deepEqual(settings.update({ userName: 'x'.repeat(81) }), {
     ok: false,
@@ -64,10 +73,35 @@ test('settings rejects invalid updates without saving partial changes', (t) => {
   });
   assert.equal(settings.get().settings.userName, 'Ada');
 
-  assert.deepEqual(settings.update({ theme: 'toxic', userName: 42 }), {
+  assert.deepEqual(settings.update({ theme: 'dark', userName: 42 }), {
     ok: false,
     error: 'invalid',
   });
-  assert.equal(settings.get().settings.theme, 'beige');
+  assert.equal(settings.get().settings.theme, 'light');
   assert.equal(settings.get().settings.userName, 'Ada');
+});
+
+test('settings migrates unsupported old display and personality values', (t) => {
+  const dir = tempUserData(t);
+  fs.writeFileSync(path.join(dir, 'settings.json'), JSON.stringify({
+    launchMinimized: true,
+    randomCommentary: true,
+    commentaryFrequency: 'medium',
+    theme: 'toxic',
+    personalityMode: 'feral',
+    modelPath: '',
+    userName: 'Ada',
+  }));
+
+  settings.init(dir);
+  const result = settings.get();
+
+  assert.equal(result.settings.launchMinimized, true);
+  assert.equal(result.settings.theme, 'dark');
+  assert.equal(result.settings.personalityMode, 'goblin');
+  assert.equal(result.settings.userName, 'Ada');
+
+  const stored = JSON.parse(fs.readFileSync(path.join(dir, 'settings.json'), 'utf8'));
+  assert.equal(stored.theme, 'dark');
+  assert.equal(stored.personalityMode, 'goblin');
 });

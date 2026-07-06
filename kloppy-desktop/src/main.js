@@ -331,6 +331,7 @@ app.whenReady().then(() => {
   // Local LLM chat. The llamafile server starts lazily inside ask().
   llm.init({
     getModelPath: () => settings.get().settings.modelPath,
+    getPersonalityMode: () => settings.get().settings.personalityMode,
     getSetupStatus: () => modelSetup.getStatusForLlm(),
     getLlamafileHomeDir: () => path.join(userDataDir, 'llamafile-runtime'),
     getAssistantContext: () => ({
