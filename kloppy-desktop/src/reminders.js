@@ -2,30 +2,28 @@
 // Reminders live in reminders.json inside Electron's userData directory:
 //   [{ id, text, dueAt, completed, createdAt }, ...]
 
-const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const storage = require('./storage');
 
 const MAX_REMINDER_LENGTH = 200;
 
-let remindersFile = null;
+let store = null;
 
 // Called once at startup with app.getPath('userData').
 function init(userDataDir) {
-  remindersFile = path.join(userDataDir, 'reminders.json');
+  store = storage.createStore(path.join(userDataDir, 'reminders.json'), {
+    label: 'reminders',
+    validate: Array.isArray,
+  });
 }
 
 function load() {
-  try {
-    const reminders = JSON.parse(fs.readFileSync(remindersFile, 'utf8'));
-    return Array.isArray(reminders) ? reminders : [];
-  } catch {
-    return [];
-  }
+  return store.load() ?? [];
 }
 
 function save(reminders) {
-  fs.writeFileSync(remindersFile, JSON.stringify(reminders, null, 2));
+  store.save(reminders);
 }
 
 function list() {

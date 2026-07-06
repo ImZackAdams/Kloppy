@@ -1,8 +1,8 @@
 // Kloppy's settings storage (main process only).
 // Settings live in settings.json inside Electron's userData directory.
 
-const fs = require('fs');
 const path = require('path');
+const storage = require('./storage');
 
 const DEFAULTS = {
   launchMinimized: false,        // stored now, wired up in a future version
@@ -19,25 +19,23 @@ const MAX_NAME_LENGTH = 80;
 const FREQUENCIES = ['low', 'medium', 'cursed'];
 const THEMES = ['midnight', 'beige', 'toxic'];
 
-let settingsFile = null;
+let store = null;
 
 // Called once at startup with app.getPath('userData').
 function init(userDataDir) {
-  settingsFile = path.join(userDataDir, 'settings.json');
+  store = storage.createStore(path.join(userDataDir, 'settings.json'), {
+    label: 'settings',
+    validate: (value) => typeof value === 'object' && value !== null && !Array.isArray(value),
+  });
 }
 
 function load() {
-  try {
-    const saved = JSON.parse(fs.readFileSync(settingsFile, 'utf8'));
-    // Unknown or missing keys fall back to defaults.
-    return { ...DEFAULTS, ...saved };
-  } catch {
-    return { ...DEFAULTS };
-  }
+  // Unknown or missing keys fall back to defaults.
+  return { ...DEFAULTS, ...(store.load() ?? {}) };
 }
 
 function save(settings) {
-  fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 2));
+  store.save(settings);
 }
 
 function get() {

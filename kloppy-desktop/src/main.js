@@ -17,6 +17,7 @@ const reminders = require('./reminders');
 const settings = require('./settings');
 const watcher = require('./watcher');
 const actions = require('./actions');
+const storage = require('./storage');
 const llm = require('./llm');
 const modelSetup = require('./model-setup');
 const { createTrayIcon } = require('./tray-icon');
@@ -70,6 +71,17 @@ function createWindow(options = {}) {
   });
 
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+
+  // Storage corruption warnings can fire before the window exists (they queue
+  // in storage.js); deliver them — and any later ones — once the renderer is
+  // ready to show them.
+  mainWindow.webContents.on('did-finish-load', () => {
+    storage.onWarning((message) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('storage:warning', message);
+      }
+    });
+  });
 
   // Closing the window hides Kloppy to the tray instead of quitting.
   // He is still there. He is always there.

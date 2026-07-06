@@ -12,30 +12,28 @@
 //   - no silent background execution, ever
 // Until all of that exists, "Run" stays a joke button on purpose.
 
-const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const storage = require('./storage');
 
 const MAX_NAME = 60;
 const MAX_TEXT = 300;
 
-let actionsFile = null;
+let store = null;
 
 function init(userDataDir) {
-  actionsFile = path.join(userDataDir, 'actions.json');
+  store = storage.createStore(path.join(userDataDir, 'actions.json'), {
+    label: 'saved actions',
+    validate: Array.isArray,
+  });
 }
 
 function load() {
-  try {
-    const actions = JSON.parse(fs.readFileSync(actionsFile, 'utf8'));
-    return Array.isArray(actions) ? actions : [];
-  } catch {
-    return [];
-  }
+  return store.load() ?? [];
 }
 
 function save(actions) {
-  fs.writeFileSync(actionsFile, JSON.stringify(actions, null, 2));
+  store.save(actions);
 }
 
 function list() {

@@ -5,13 +5,17 @@
 
 const fs = require('fs');
 const path = require('path');
+const storage = require('./storage');
 
-let watchedFile = null;
+let store = null;
 let onEvent = null;           // set by main.js; receives { dir, file, type, at }
 const watchers = new Map();   // dir -> fs.FSWatcher
 
 function init(userDataDir, eventCallback) {
-  watchedFile = path.join(userDataDir, 'watched.json');
+  store = storage.createStore(path.join(userDataDir, 'watched.json'), {
+    label: 'watched folders',
+    validate: Array.isArray,
+  });
   onEvent = eventCallback;
   // Resume watching folders from the previous session.
   for (const dir of load()) {
@@ -20,16 +24,12 @@ function init(userDataDir, eventCallback) {
 }
 
 function load() {
-  try {
-    const folders = JSON.parse(fs.readFileSync(watchedFile, 'utf8'));
-    return Array.isArray(folders) ? folders.filter((f) => typeof f === 'string') : [];
-  } catch {
-    return [];
-  }
+  const folders = store.load() ?? [];
+  return folders.filter((f) => typeof f === 'string');
 }
 
 function save(folders) {
-  fs.writeFileSync(watchedFile, JSON.stringify(folders, null, 2));
+  store.save(folders);
 }
 
 function startWatching(dir) {

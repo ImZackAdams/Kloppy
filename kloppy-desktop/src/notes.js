@@ -2,31 +2,28 @@
 // Notes live in a single JSON file inside Electron's userData directory:
 //   [{ id, text, createdAt }, ...]  — newest first.
 
-const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const storage = require('./storage');
 
 const MAX_NOTE_LENGTH = 500;
 
-let notesFile = null;
+let store = null;
 
 // Called once at startup with app.getPath('userData').
 function init(userDataDir) {
-  notesFile = path.join(userDataDir, 'notes.json');
+  store = storage.createStore(path.join(userDataDir, 'notes.json'), {
+    label: 'notes',
+    validate: Array.isArray,
+  });
 }
 
 function load() {
-  try {
-    const notes = JSON.parse(fs.readFileSync(notesFile, 'utf8'));
-    return Array.isArray(notes) ? notes : [];
-  } catch {
-    // Missing or corrupted file — start fresh rather than crash.
-    return [];
-  }
+  return store.load() ?? [];
 }
 
 function save(notes) {
-  fs.writeFileSync(notesFile, JSON.stringify(notes, null, 2));
+  store.save(notes);
 }
 
 function list() {

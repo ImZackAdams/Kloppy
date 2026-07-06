@@ -1011,6 +1011,12 @@ window.kloppy.onCursed(() => {
   setStatus('Kloppy said something cursed. You asked for this.');
 });
 
+// One-time warnings from the main process when a storage file was corrupted
+// and had to be restored from backup (or reset to defaults).
+window.kloppy.onStorageWarning((text) => {
+  say(text);
+});
+
 async function boot() {
   await loadSettings();
   const statusResult = await window.kloppy.llm.status();
