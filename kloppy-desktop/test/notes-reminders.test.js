@@ -91,3 +91,51 @@ test('reminders validate input, persist, complete, and remove', (t) => {
   assert.deepEqual(reminders.remove(added.reminder.id), { ok: true });
   assert.deepEqual(reminders.list(), { ok: true, reminders: [] });
 });
+
+test('reminders notify exactly once per due occurrence', (t) => {
+  const dir = tempUserData(t, 'kloppy-reminder-notify-');
+  reminders.init(dir);
+
+  const overdue = reminders.add('stretch', '2026-01-01T10:00:00.000Z');
+  const upcoming = reminders.add('hydrate', '2999-01-01T10:00:00.000Z');
+  assert.equal(overdue.ok, true);
+  assert.equal(upcoming.ok, true);
+
+  // Only past-due, unnotified reminders are eligible.
+  assert.deepEqual(
+    reminders.dueForNotification().map((r) => r.id),
+    [overdue.reminder.id]
+  );
+
+  assert.deepEqual(reminders.markNotified('missing'), { ok: false, error: 'not-found' });
+  assert.deepEqual(reminders.markNotified(overdue.reminder.id), { ok: true });
+  assert.deepEqual(reminders.dueForNotification(), []);
+
+  // notifiedAt persists, so a restart must not re-fire old notifications.
+  reminders.init(dir);
+  assert.deepEqual(reminders.dueForNotification(), []);
+  const stored = reminders.list().reminders.find((r) => r.id === overdue.reminder.id);
+  assert.equal(typeof stored.notifiedAt, 'string');
+
+  // Rolling dueAt later than notifiedAt re-arms the notification for the
+  // new occurrence. There is no reschedule API yet, so edit the file the way
+  // a snooze/recurring feature would.
+  const file = path.join(dir, 'reminders.json');
+  const onDisk = JSON.parse(fs.readFileSync(file, 'utf8'));
+  onDisk.find((r) => r.id === overdue.reminder.id).dueAt = '2500-01-01T10:00:00.000Z';
+  fs.writeFileSync(file, JSON.stringify(onDisk, null, 2));
+
+  assert.deepEqual(reminders.dueForNotification(), []); // not due yet
+  assert.deepEqual(
+    reminders.dueForNotification(new Date('2500-06-01T00:00:00.000Z')).map((r) => r.id),
+    [overdue.reminder.id]
+  );
+
+  // Completing clears notification state and stops future notifications.
+  assert.deepEqual(reminders.markNotified(overdue.reminder.id), { ok: true });
+  assert.deepEqual(reminders.complete(overdue.reminder.id), { ok: true });
+  const completed = reminders.list().reminders.find((r) => r.id === overdue.reminder.id);
+  assert.equal(completed.completed, true);
+  assert.equal(completed.notifiedAt, undefined);
+  assert.deepEqual(reminders.dueForNotification(new Date('2500-06-01T00:00:00.000Z')), []);
+});

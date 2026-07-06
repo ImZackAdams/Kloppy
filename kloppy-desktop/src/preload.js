@@ -16,6 +16,8 @@ contextBridge.exposeInMainWorld('kloppy', {
     add: (text, dueAt) => ipcRenderer.invoke('reminders:add', text, dueAt),
     complete: (id) => ipcRenderer.invoke('reminders:complete', id),
     remove: (id) => ipcRenderer.invoke('reminders:delete', id),
+    // Fired when the user clicks an OS reminder notification.
+    onOpenPanel: (callback) => ipcRenderer.on('reminders:open-panel', () => callback()),
   },
   settings: {
     get: () => ipcRenderer.invoke('settings:get'),

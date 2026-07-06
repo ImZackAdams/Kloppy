@@ -93,14 +93,35 @@ function createWindow(options = {}) {
   });
 }
 
+// ---- Due-reminder scheduler ----
+// OS notifications fire from the main process, so reminders are announced
+// even while the window hides in the tray. Notified state persists in
+// reminders.json (notifiedAt), so each due occurrence notifies exactly once
+// across restarts.
+
+const REMINDER_CHECK_MS = 30 * 1000;
+
 function notifyReminder(reminder) {
-  if (!reminder || !Notification.isSupported()) return;
-  const dueAt = new Date(reminder.dueAt);
-  if (Number.isNaN(dueAt.getTime()) || dueAt > new Date()) return;
-  new Notification({
+  if (!Notification.isSupported()) return;
+  const notification = new Notification({
     title: 'Kloppy reminder',
     body: reminder.text,
-  }).show();
+  });
+  notification.on('click', () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    mainWindow.show();
+    mainWindow.focus();
+    mainWindow.webContents.send('reminders:open-panel');
+  });
+  notification.show();
+}
+
+function checkDueReminders() {
+  for (const reminder of reminders.dueForNotification()) {
+    // Mark first: a lost notification beats a duplicate one.
+    reminders.markNotified(reminder.id);
+    notifyReminder(reminder);
+  }
 }
 
 // ---- The summon popup: a tiny Kloppy that pops up with commentary ----
@@ -205,10 +226,10 @@ app.whenReady().then(() => {
   ipcMain.handle('reminders:list', () => reminders.list());
   ipcMain.handle('reminders:add', (_event, text, dueAt) => reminders.add(text, dueAt));
   ipcMain.handle('reminders:complete', (_event, id) => {
-    const reminder = reminders.list().reminders.find((r) => r.id === id);
-    const result = reminders.complete(id);
-    if (result.ok) notifyReminder(reminder);
-    return result;
+    // The renderer auto-completes reminders the moment its own poll sees
+    // them come due; sweep first so that occurrence still notifies once.
+    checkDueReminders();
+    return reminders.complete(id);
   });
   ipcMain.handle('reminders:delete', (_event, id) => reminders.remove(id));
 
@@ -289,6 +310,9 @@ app.whenReady().then(() => {
 
   createWindow({ launchMinimized: settings.get().settings.launchMinimized });
   createTray();
+
+  checkDueReminders(); // anything that came due while Kloppy was closed
+  setInterval(checkDueReminders, REMINDER_CHECK_MS);
 
   // macOS: clicking the dock icon re-shows the hidden window.
   app.on('activate', () => {

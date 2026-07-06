@@ -331,6 +331,12 @@ async function checkDueReminders() {
 setInterval(checkDueReminders, REMINDER_CHECK_MS);
 checkDueReminders(); // catch anything that came due while Kloppy was asleep
 
+// Clicking an OS reminder notification brings the window up on this panel.
+window.kloppy.reminders.onOpenPanel(() => {
+  setActiveButton('btn-reminder');
+  openReminders();
+});
+
 // ---- Settings panel ----
 
 let currentSettings = null;

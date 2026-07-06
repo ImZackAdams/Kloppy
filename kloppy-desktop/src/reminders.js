@@ -1,6 +1,8 @@
 // Kloppy's reminder storage (main process only).
 // Reminders live in reminders.json inside Electron's userData directory:
-//   [{ id, text, dueAt, completed, createdAt }, ...]
+//   [{ id, text, dueAt, completed, createdAt, notifiedAt? }, ...]
+// notifiedAt records when the OS notification for the current dueAt fired,
+// so restarts never re-notify an occurrence that was already announced.
 
 const path = require('path');
 const crypto = require('crypto');
@@ -64,6 +66,33 @@ function complete(id) {
     return { ok: false, error: 'not-found' };
   }
   reminder.completed = true;
+  // Completing ends this due occurrence; clear notification state so any
+  // future reschedule of the reminder starts clean.
+  delete reminder.notifiedAt;
+  save(reminders);
+  return { ok: true };
+}
+
+// Reminders that should fire an OS notification: past due, not completed,
+// and not yet notified for this due occurrence. notifiedAt is compared
+// against dueAt (not treated as a boolean) so moving dueAt later — a snooze
+// or a recurring roll — re-arms the notification automatically.
+function dueForNotification(now = new Date()) {
+  return load().filter((r) => {
+    if (r.completed) return false;
+    const due = new Date(r.dueAt);
+    if (!(due <= now)) return false; // also skips unparseable dates
+    return !r.notifiedAt || new Date(r.notifiedAt) < due;
+  });
+}
+
+function markNotified(id) {
+  const reminders = load();
+  const reminder = reminders.find((r) => r.id === id);
+  if (!reminder) {
+    return { ok: false, error: 'not-found' };
+  }
+  reminder.notifiedAt = new Date().toISOString();
   save(reminders);
   return { ok: true };
 }
@@ -78,4 +107,13 @@ function remove(id) {
   return { ok: true };
 }
 
-module.exports = { init, list, add, complete, remove, MAX_REMINDER_LENGTH };
+module.exports = {
+  init,
+  list,
+  add,
+  complete,
+  remove,
+  dueForNotification,
+  markNotified,
+  MAX_REMINDER_LENGTH,
+};
