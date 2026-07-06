@@ -14,6 +14,49 @@ const quips = [
   "Fun fact: every unread notification makes me stronger.",
 ];
 
+const moodQuips = {
+  helpful: [
+    'Ready when you are. Slightly retro, fully local.',
+    'Useful mode engaged. I even wiped my tiny shoes.',
+  ],
+  goblin: quips,
+  corporate: [
+    'Action items await. Kloppy has adjusted his imaginary tie.',
+    'Productivity posture: engaged. Sarcasm budget: reduced.',
+  ],
+  quiet: [
+    'Here when needed.',
+    'Standing by. Quietly.',
+  ],
+  chaos: [
+    'BUTTONS HUM. DESTINY LOADS. Still useful, somehow.',
+    'The task furnace is lit. Feed it something actionable.',
+  ],
+};
+
+const personalityDetails = {
+  helpful: {
+    description: 'Useful, friendly, and only mildly cursed.',
+    saved: 'Helpful Kloppy enabled. I will be useful with fewer theatrical fumes.',
+  },
+  goblin: {
+    description: 'Sarcastic local desktop gremlin. Helpful first, weird second.',
+    saved: 'Goblin Kloppy enabled. Utility first, weird little commentary second.',
+  },
+  corporate: {
+    description: 'Professional mode for pretending this is a serious product.',
+    saved: 'Corporate Kloppy enabled. I have located a tie and accepted my fate.',
+  },
+  quiet: {
+    description: 'Fewer jokes, shorter answers, less yapping.',
+    saved: 'Quiet Mode enabled. I will keep it short.',
+  },
+  chaos: {
+    description: 'Maximum retro gremlin energy. Still useful. Allegedly.',
+    saved: 'Chaos Mode enabled. The brakes are ornamental, but the map remains.',
+  },
+};
+
 // ---- Static panels (placeholders until their features arrive) ----
 
 const panels = {
@@ -521,7 +564,9 @@ function setupCommentary() {
   const delay = COMMENTARY_MS[currentSettings.commentaryFrequency] || COMMENTARY_MS.medium;
   commentaryTimer = setInterval(() => {
     // "cursed" frequency also draws from the cursed pool.
-    const pool = currentSettings.commentaryFrequency === 'cursed' ? cursedLines : quips;
+    const pool = currentSettings.commentaryFrequency === 'cursed'
+      ? cursedLines
+      : (moodQuips[currentSettings.personalityMode] || quips);
     say(pool[Math.floor(Math.random() * pool.length)]);
     setStatus('Kloppy commented. Unprompted. As foretold.');
   }, delay);
@@ -531,12 +576,25 @@ async function saveSetting(key, value) {
   const result = await window.kloppy.settings.update({ [key]: value });
   if (!result.ok) {
     setStatus('Kloppy rejected that setting. He has standards, apparently.');
-    return;
+    return result;
   }
   currentSettings = result.settings;
   applyTheme(currentSettings.theme);
   setupCommentary();
+  if (key === 'personalityMode') {
+    updatePersonalityDescription(currentSettings.personalityMode);
+    say((personalityDetails[currentSettings.personalityMode] || personalityDetails.goblin).saved);
+    setStatus('Personality mode saved.');
+    return result;
+  }
   setStatus('Setting absorbed. Kloppy adapts. Reluctantly.');
+  return result;
+}
+
+function updatePersonalityDescription(mode) {
+  const desc = document.getElementById('personality-description');
+  if (!desc) return;
+  desc.textContent = (personalityDetails[mode] || personalityDetails.goblin).description;
 }
 
 async function openSettings() {
@@ -557,12 +615,21 @@ async function openSettings() {
         <option value="cursed">cursed</option>
       </select>
     </label>
-    <label class="fake-option">Theme
+    <label class="fake-option">Display mode
       <select id="set-theme">
-        <option value="midnight">midnight</option>
-        <option value="beige">beige</option>
-        <option value="toxic">toxic green</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
       </select>
+    </label>
+    <label class="fake-option">Personality / Mood
+      <select id="set-personality">
+        <option value="helpful">Helpful Kloppy</option>
+        <option value="goblin">Goblin Kloppy</option>
+        <option value="corporate">Corporate Kloppy</option>
+        <option value="quiet">Quiet Mode</option>
+        <option value="chaos">Chaos Mode</option>
+      </select>
+      <span class="fine-print" id="personality-description"></span>
     </label>
     <label class="fake-option model-path-option">Your name
       <input type="text" id="set-user-name" placeholder="Zack">
@@ -579,6 +646,7 @@ async function openSettings() {
   const commentary = document.getElementById('set-commentary');
   const frequency = document.getElementById('set-frequency');
   const theme = document.getElementById('set-theme');
+  const personality = document.getElementById('set-personality');
   const userName = document.getElementById('set-user-name');
   const modelPath = document.getElementById('set-model-path');
 
@@ -586,13 +654,16 @@ async function openSettings() {
   commentary.checked = s.randomCommentary;
   frequency.value = s.commentaryFrequency;
   theme.value = s.theme;
+  personality.value = s.personalityMode;
   userName.value = s.userName || '';
   modelPath.value = s.modelPath;
+  updatePersonalityDescription(s.personalityMode);
 
   launchMin.addEventListener('change', () => saveSetting('launchMinimized', launchMin.checked));
   commentary.addEventListener('change', () => saveSetting('randomCommentary', commentary.checked));
   frequency.addEventListener('change', () => saveSetting('commentaryFrequency', frequency.value));
   theme.addEventListener('change', () => saveSetting('theme', theme.value));
+  personality.addEventListener('change', () => saveSetting('personalityMode', personality.value));
   userName.addEventListener('change', () => saveSetting('userName', userName.value));
   modelPath.addEventListener('change', () => saveSetting('modelPath', modelPath.value));
 }
@@ -1430,8 +1501,9 @@ async function boot() {
 let quipIndex = 0;
 
 document.getElementById('btn-say').addEventListener('click', () => {
-  quipIndex = (quipIndex + 1) % quips.length;
-  say(quips[quipIndex]);
+  const pool = moodQuips[currentSettings?.personalityMode] || quips;
+  quipIndex = (quipIndex + 1) % pool.length;
+  say(pool[quipIndex]);
   setStatus(statusLines.say);
 });
 

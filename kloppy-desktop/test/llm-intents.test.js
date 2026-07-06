@@ -148,3 +148,26 @@ test('system prompt includes only enabled local memories', () => {
   assert.match(prompt, /- The user prefers concise answers\./);
   assert.doesNotMatch(prompt, /Disabled memory should stay private/);
 });
+
+test('system prompt uses current personality guidance', () => {
+  llm.init({
+    getModelPath: () => '',
+    getPersonalityMode: () => 'quiet',
+    getSetupStatus: () => null,
+    getAssistantContext: () => ({
+      profile: { userName: '' },
+      notes: [],
+      reminders: [],
+      memories: [],
+      watchedFolders: [],
+      actions: [],
+    }),
+    localActions: {},
+    broadcast: () => {},
+  });
+
+  const prompt = llm.buildSystemPrompt('hello');
+
+  assert.match(prompt, /You are Kloppy in quiet mode/);
+  assert.doesNotMatch(prompt, /with the brakes cut/);
+});

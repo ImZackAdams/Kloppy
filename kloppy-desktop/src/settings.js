@@ -3,12 +3,17 @@
 
 const path = require('path');
 const storage = require('./storage');
+const {
+  DEFAULT_PERSONALITY_MODE,
+  isPersonalityMode,
+} = require('./personality');
 
 const DEFAULTS = {
   launchMinimized: false,        // stored now, wired up in a future version
   randomCommentary: true,
   commentaryFrequency: 'medium', // low | medium | cursed
-  theme: 'midnight',             // midnight | beige | toxic
+  theme: 'dark',                 // light | dark
+  personalityMode: DEFAULT_PERSONALITY_MODE,
   modelPath: '',                 // path to a llamafile executable ('' = no local model)
   userName: '',                  // optional local profile name for chat memory
 };
@@ -17,7 +22,7 @@ const MAX_PATH_LENGTH = 4096;
 const MAX_NAME_LENGTH = 80;
 
 const FREQUENCIES = ['low', 'medium', 'cursed'];
-const THEMES = ['midnight', 'beige', 'toxic'];
+const THEMES = ['light', 'dark'];
 
 let store = null;
 
@@ -29,9 +34,53 @@ function init(userDataDir) {
   });
 }
 
+function hasOwn(value, key) {
+  return Object.prototype.hasOwnProperty.call(value, key);
+}
+
+function normalizeLoaded(raw) {
+  if (!raw) return { settings: { ...DEFAULTS }, migrated: false };
+
+  const settings = { ...DEFAULTS, ...raw };
+  let migrated = false;
+
+  if (typeof settings.launchMinimized !== 'boolean') {
+    settings.launchMinimized = DEFAULTS.launchMinimized;
+    migrated = hasOwn(raw, 'launchMinimized') || migrated;
+  }
+  if (typeof settings.randomCommentary !== 'boolean') {
+    settings.randomCommentary = DEFAULTS.randomCommentary;
+    migrated = hasOwn(raw, 'randomCommentary') || migrated;
+  }
+  if (!FREQUENCIES.includes(settings.commentaryFrequency)) {
+    settings.commentaryFrequency = DEFAULTS.commentaryFrequency;
+    migrated = hasOwn(raw, 'commentaryFrequency') || migrated;
+  }
+  if (!THEMES.includes(settings.theme)) {
+    settings.theme = DEFAULTS.theme;
+    migrated = hasOwn(raw, 'theme') || migrated;
+  }
+  if (!isPersonalityMode(settings.personalityMode)) {
+    settings.personalityMode = DEFAULTS.personalityMode;
+    migrated = hasOwn(raw, 'personalityMode') || migrated;
+  }
+  if (typeof settings.modelPath !== 'string' || settings.modelPath.length > MAX_PATH_LENGTH) {
+    settings.modelPath = DEFAULTS.modelPath;
+    migrated = hasOwn(raw, 'modelPath') || migrated;
+  }
+  if (typeof settings.userName !== 'string' || settings.userName.length > MAX_NAME_LENGTH) {
+    settings.userName = DEFAULTS.userName;
+    migrated = hasOwn(raw, 'userName') || migrated;
+  }
+
+  return { settings, migrated };
+}
+
 function load() {
   // Unknown or missing keys fall back to defaults.
-  return { ...DEFAULTS, ...(store.load() ?? {}) };
+  const { settings, migrated } = normalizeLoaded(store.load());
+  if (migrated) save(settings);
+  return settings;
 }
 
 function save(settings) {
@@ -44,7 +93,7 @@ function get() {
 
 // Accepts a partial update; validates each key it knows about.
 function update(partial) {
-  if (typeof partial !== 'object' || partial === null) {
+  if (typeof partial !== 'object' || partial === null || Array.isArray(partial)) {
     return { ok: false, error: 'invalid' };
   }
 
@@ -65,6 +114,10 @@ function update(partial) {
   if ('theme' in partial) {
     if (!THEMES.includes(partial.theme)) return { ok: false, error: 'invalid' };
     settings.theme = partial.theme;
+  }
+  if ('personalityMode' in partial) {
+    if (!isPersonalityMode(partial.personalityMode)) return { ok: false, error: 'invalid' };
+    settings.personalityMode = partial.personalityMode;
   }
   if ('modelPath' in partial) {
     if (typeof partial.modelPath !== 'string' || partial.modelPath.length > MAX_PATH_LENGTH) {
