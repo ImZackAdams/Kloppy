@@ -622,9 +622,41 @@ async function openModelSetup() {
 
 // ---- Chat panel (Kloppy's real brain: a local llamafile server) ----
 
-// Transcript lives in renderer memory only — nothing is written to disk,
-// and it vanishes when the app closes.
-const chatMessages = [];
+// Transcript of the active chat, mirrored from chats.json via the main
+// process. Renderer-side messages are { who: 'you' | 'kloppy', text }.
+let chatMessages = [];
+let activeChatId = null;
+
+// Refills the chat selector from the stored chat list (no-op off-panel).
+async function refreshChatList() {
+  const select = document.getElementById('chat-select');
+  if (!select) return;
+  const result = await window.kloppy.chats.list();
+  activeChatId = result.activeChatId;
+  select.textContent = '';
+  for (const chat of result.chats) {
+    const option = document.createElement('option');
+    option.value = chat.id;
+    option.textContent = chat.title;
+    select.appendChild(option);
+  }
+  select.value = result.activeChatId;
+}
+
+// Replaces the visible transcript with the active chat's stored messages.
+async function loadActiveChat() {
+  const result = await window.kloppy.chats.getActive();
+  activeChatId = result.chat.id;
+  chatMessages = result.chat.messages.map((msg) => ({
+    who: msg.role === 'user' ? 'you' : 'kloppy',
+    text: msg.content,
+  }));
+  const log = document.getElementById('chat-log');
+  if (!log) return;
+  log.textContent = '';
+  for (const msg of chatMessages) log.appendChild(chatLine(msg));
+  log.scrollTop = log.scrollHeight;
+}
 
 // One Kloppy-voiced line per brain state, shown at the top of the chat panel.
 function brainNote() {
@@ -750,18 +782,40 @@ function chatLine(msg) {
   return li;
 }
 
+// Guards every chat management action: switching or deleting chats while a
+// reply is still streaming would file the reply under the wrong chat.
+function chatBusy() {
+  if (!activeStream) return false;
+  say(askErrorLines.busy);
+  setStatus('Kloppy is mid-thought. Chat surgery must wait.');
+  return true;
+}
+
 async function openChat() {
   panelTitle.textContent = 'CHAT.EXE';
   panelBody.innerHTML = `
     <p class="fine-print" id="chat-note"></p>
+    <div class="chat-toolbar">
+      <select id="chat-select"></select>
+      <button id="chat-new" type="button">New Chat</button>
+      <button id="chat-rename" type="button">Rename</button>
+      <button id="chat-clear" type="button">Clear</button>
+      <button id="chat-delete" type="button">Delete</button>
+      <button id="chat-delete-all" type="button">Delete All</button>
+    </div>
+    <div class="chat-rename-row hidden" id="chat-rename-row">
+      <input id="chat-rename-input" type="text" maxlength="80"
+        placeholder="New name for this chat">
+      <button id="chat-rename-save" type="button">Save name</button>
+    </div>
     <ul class="note-list chat-log" id="chat-log"></ul>
     <div class="note-editor">
       <textarea id="chat-input" rows="2" maxlength="2000"
         placeholder="Say something. A real model answers. From inside your computer."></textarea>
       <button id="chat-send" type="button">Send</button>
     </div>
-    <p class="fine-print">Chat runs on your llamafile via localhost only. No cloud,
-      no account, no history saved.</p>`;
+    <p class="fine-print">Chats are stored locally on this computer. Kloppy does not
+      sync them or phone home. The model runs via localhost only.</p>`;
 
   document.getElementById('chat-send').addEventListener('click', sendChat);
   document.getElementById('chat-input').addEventListener('keydown', (e) => {
@@ -771,18 +825,111 @@ async function openChat() {
     }
   });
 
-  const log = document.getElementById('chat-log');
-  for (const msg of chatMessages) log.appendChild(chatLine(msg));
-  log.scrollTop = log.scrollHeight;
+  const select = document.getElementById('chat-select');
+  const renameRow = document.getElementById('chat-rename-row');
+  const renameInput = document.getElementById('chat-rename-input');
 
-  // Coming back mid-generation: point the live stream at the freshly
-  // rebuilt bubble so tokens keep appearing.
+  select.addEventListener('change', async () => {
+    if (chatBusy()) {
+      select.value = activeChatId;
+      return;
+    }
+    await window.kloppy.chats.switch(select.value);
+    await loadActiveChat();
+    say('Different chat, same gremlin.');
+    setStatus('Kloppy swapped transcripts.');
+  });
+
+  document.getElementById('chat-new').addEventListener('click', async () => {
+    if (chatBusy()) return;
+    await window.kloppy.chats.create();
+    await refreshChatList();
+    await loadActiveChat();
+    say('Fresh chat. Zero baggage. For now.');
+    setStatus('New chat opened.');
+  });
+
+  document.getElementById('chat-rename').addEventListener('click', () => {
+    renameRow.classList.toggle('hidden');
+    if (!renameRow.classList.contains('hidden')) {
+      renameInput.value = select.selectedOptions[0]?.textContent || '';
+      renameInput.focus();
+    }
+  });
+
+  async function saveChatName() {
+    const result = await window.kloppy.chats.rename(activeChatId, renameInput.value);
+    if (!result.ok) {
+      say(result.error === 'too-long'
+        ? `Keep the name under ${result.max} characters. It's a chat, not a memoir.`
+        : 'A chat needs an actual name. Words. Any words.');
+      setStatus('Rename rejected.');
+      return;
+    }
+    renameRow.classList.add('hidden');
+    await refreshChatList();
+    say('Renamed. The old name is dead to me.');
+    setStatus('Chat renamed.');
+  }
+  document.getElementById('chat-rename-save').addEventListener('click', saveChatName);
+  renameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') saveChatName();
+  });
+
+  document.getElementById('chat-clear').addEventListener('click', async () => {
+    if (chatBusy()) return;
+    const result = await window.kloppy.chats.clearCurrent();
+    if (!result.ok) {
+      setStatus('Clear canceled. The words live on.');
+      return;
+    }
+    await loadActiveChat();
+    say('Wiped. We never said any of that.');
+    setStatus('Chat cleared.');
+  });
+
+  document.getElementById('chat-delete').addEventListener('click', async () => {
+    if (chatBusy()) return;
+    const result = await window.kloppy.chats.delete(activeChatId);
+    if (!result.ok) {
+      setStatus('Delete canceled. The chat survives.');
+      return;
+    }
+    await refreshChatList();
+    await loadActiveChat();
+    say('Chat shredded. Kloppy ate the shreds. Again.');
+    setStatus('Chat deleted.');
+  });
+
+  document.getElementById('chat-delete-all').addEventListener('click', async () => {
+    if (chatBusy()) return;
+    const result = await window.kloppy.chats.deleteAll();
+    if (!result.ok) {
+      setStatus('Mass deletion canceled. History remains.');
+      return;
+    }
+    await refreshChatList();
+    await loadActiveChat();
+    say('All of it. Gone. I remember nothing, which is my natural state.');
+    setStatus('All chats deleted.');
+  });
+
+  await refreshChatList();
+
   if (activeStream) {
+    // Coming back mid-generation: rebuild the transcript from renderer
+    // memory (disk doesn't have the streaming reply yet) and point the live
+    // stream at the freshly rebuilt bubble so tokens keep appearing.
+    const log = document.getElementById('chat-log');
+    for (const msg of chatMessages) log.appendChild(chatLine(msg));
+    log.scrollTop = log.scrollHeight;
     const index = chatMessages.indexOf(activeStream.msg);
     if (index >= 0) {
       activeStream.textEl = log.children[index].lastChild;
       renderStreamText();
     }
+  } else {
+    await loadActiveChat();
   }
 
   const result = await window.kloppy.llm.status();
@@ -831,6 +978,8 @@ async function sendChat() {
 
   const history = chatMessages.slice(-8);
   appendChat('you', text);
+  const saved = await window.kloppy.chats.appendMessage('user', text);
+  if (saved.ok) refreshChatList(); // the first message may have auto-titled the chat
   input.value = '';
   sendBtn.disabled = true;
   say('Thinking. With my real brain. Listen to those fans.');
@@ -853,11 +1002,13 @@ async function sendChat() {
       ? startFailedLine(result.detail)
       : askErrorLines[result.error] || 'Something went wrong in there. Try again.';
     if (stream.msg.text) {
-      // Streaming died mid-reply: keep the partial words, mark them.
+      // Streaming died mid-reply: keep the partial words, mark them, and
+      // persist them so the transcript on disk shows the interruption too.
       stream.msg.text += ' [interrupted]';
       if (stream.textEl && stream.textEl.isConnected) {
         stream.textEl.textContent = ' ' + stream.msg.text;
       }
+      await window.kloppy.chats.appendMessage('assistant', stream.msg.text);
       say(line);
     } else {
       // Nothing streamed: drop the empty bubble and show the error instead.
@@ -878,6 +1029,7 @@ async function sendChat() {
   if (stream.textEl && stream.textEl.isConnected) {
     stream.textEl.textContent = ' ' + stream.msg.text;
   }
+  await window.kloppy.chats.appendMessage('assistant', result.reply);
   say('I said words. Real, locally-generated words.');
   setStatus('Kloppy answered with his own brain. A milestone.');
 }

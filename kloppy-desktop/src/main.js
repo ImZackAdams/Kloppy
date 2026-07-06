@@ -13,6 +13,7 @@ const {
 } = require('electron');
 const path = require('path');
 const notes = require('./notes');
+const chats = require('./chats');
 const reminders = require('./reminders');
 const settings = require('./settings');
 const watcher = require('./watcher');
@@ -202,6 +203,7 @@ app.whenReady().then(() => {
   // Storage lives next to the app's other user data.
   const userDataDir = app.getPath('userData');
   notes.init(userDataDir);
+  chats.init(userDataDir);
   reminders.init(userDataDir);
   settings.init(userDataDir);
   actions.init(userDataDir);
@@ -222,6 +224,52 @@ app.whenReady().then(() => {
   ipcMain.handle('notes:list', () => notes.list());
   ipcMain.handle('notes:add', (_event, text) => notes.add(text));
   ipcMain.handle('notes:delete', (_event, id) => notes.remove(id));
+
+  // Chat history. Destructive operations confirm through a native dialog
+  // here in the main process, so the renderer can never erase chats alone.
+  async function confirmChatAction(confirmLabel, message, detail) {
+    const result = await dialog.showMessageBox(mainWindow, {
+      type: 'warning',
+      buttons: [confirmLabel, 'Cancel'],
+      defaultId: 1,
+      cancelId: 1,
+      title: 'Kloppy',
+      message,
+      detail,
+    });
+    return result.response === 0;
+  }
+
+  ipcMain.handle('chats:list', () => chats.list());
+  ipcMain.handle('chats:getActive', () => chats.getActive());
+  ipcMain.handle('chats:create', () => chats.create());
+  ipcMain.handle('chats:switch', (_event, id) => chats.switchTo(id));
+  ipcMain.handle('chats:rename', (_event, id, title) => chats.rename(id, title));
+  ipcMain.handle('chats:delete', async (_event, id) => {
+    const target = chats.list().chats.find((c) => c.id === id);
+    if (!target) return { ok: false, error: 'not-found' };
+    const confirmed = await confirmChatAction('Delete',
+      `Delete the chat "${target.title}"?`,
+      'Its messages are erased from this computer. There is no undo.');
+    if (!confirmed) return { ok: false, error: 'canceled' };
+    return chats.remove(id);
+  });
+  ipcMain.handle('chats:deleteAll', async () => {
+    const confirmed = await confirmChatAction('Delete all',
+      'Delete ALL chat history?',
+      'Every chat is erased from this computer. There is no undo.');
+    if (!confirmed) return { ok: false, error: 'canceled' };
+    return chats.removeAll();
+  });
+  ipcMain.handle('chats:clearCurrent', async () => {
+    const confirmed = await confirmChatAction('Clear',
+      'Clear the current chat?',
+      'Its messages are erased from this computer. There is no undo.');
+    if (!confirmed) return { ok: false, error: 'canceled' };
+    return chats.clearActive();
+  });
+  ipcMain.handle('chats:appendMessage', (_event, role, content) =>
+    chats.appendMessage(role, content));
 
   ipcMain.handle('reminders:list', () => reminders.list());
   ipcMain.handle('reminders:add', (_event, text, dueAt) => reminders.add(text, dueAt));
