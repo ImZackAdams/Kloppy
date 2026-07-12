@@ -1701,19 +1701,34 @@
 
     const DOWNLOADS = {
       version: '0.1.0',
-      // Fill url + sha256 for each platform after publishing the GitHub release.
-      // URL shape:
-      //   https://github.com/ImZackAdams/Kloppy-/releases/download/v0.1.0/Kloppy-0.1.0-<os>-<arch>.<ext>
-      // Exact artifact names:
-      //   Kloppy-0.1.0-win-x64.exe           (windows)
-      //   Kloppy-0.1.0-mac-universal.dmg     (macos)
-      //   Kloppy-0.1.0-linux-x86_64.AppImage (linuxAppImage)
-      //   Kloppy-0.1.0-linux-amd64.deb       (linuxDeb)
+      // url + sha256 come from the published GitHub release and its
+      // SHA256SUMS-<os>.txt files:
+      //   https://github.com/ImZackAdams/Kloppy/releases/tag/v0.1.0
       platforms: {
-        windows: { label: 'Windows', fileType: '.exe', url: '', sha256: '' },
-        macos: { label: 'macOS', fileType: '.dmg', url: '', sha256: '' },
-        linuxAppImage: { label: 'Linux · AppImage', fileType: '.AppImage', url: '', sha256: '' },
-        linuxDeb: { label: 'Linux · .deb', fileType: '.deb', url: '', sha256: '' }
+        windows: {
+          label: 'Windows',
+          fileType: '.exe',
+          url: 'https://github.com/ImZackAdams/Kloppy/releases/download/v0.1.0/Kloppy-0.1.0-win-x64.exe',
+          sha256: '16d44d8de0866498c908f5da842b1535f2a58a985a667197a569e5ab165d773a'
+        },
+        macos: {
+          label: 'macOS',
+          fileType: '.dmg',
+          url: 'https://github.com/ImZackAdams/Kloppy/releases/download/v0.1.0/Kloppy-0.1.0-mac-universal.dmg',
+          sha256: '1574ed9416520d2623b32852fafe95401754c55dbbb39301e50e1c5d78d635b9'
+        },
+        linuxAppImage: {
+          label: 'Linux · AppImage',
+          fileType: '.AppImage',
+          url: 'https://github.com/ImZackAdams/Kloppy/releases/download/v0.1.0/Kloppy-0.1.0-linux-x86_64.AppImage',
+          sha256: '5f9ad00999ed5d02e62ffe39a28c4194dad156d1d085c6784299d0b61197e9b0'
+        },
+        linuxDeb: {
+          label: 'Linux · .deb',
+          fileType: '.deb',
+          url: 'https://github.com/ImZackAdams/Kloppy/releases/download/v0.1.0/Kloppy-0.1.0-linux-amd64.deb',
+          sha256: '2ce4cc3f4221b91458f33a2f814939ec00434334842e00ed14ad9793a77e8a1b'
+        }
       }
     };
 
