@@ -1,12 +1,19 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const { spawn } = require('node:child_process');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 
 const llm = require('../src/llm');
+
+// Fake "llamafiles" below are plain node scripts, not real executables, so
+// Windows cannot spawn them directly — run them through the node binary.
+function spawnFakeServer(modelPath, args, opts) {
+  return spawn(process.execPath, [modelPath, ...args], opts);
+}
 
 test('tuned profile bounds context and disables the web UI', () => {
   const args = llm.buildServerArgs('tuned', 4242);
@@ -60,8 +67,7 @@ test('extractReply strips leaked thinking scratchpads', () => {
 // OpenAI-compatible API (health checks + streaming chat completions via
 // SSE) to exercise ask() end to end. Behavior is scripted off markers in
 // the user prompt. Rejects requests that forget stream:true.
-const FAKE_SERVER_SOURCE = `#!/usr/bin/env node
-'use strict';
+const FAKE_SERVER_SOURCE = `'use strict';
 const http = require('http');
 const port = Number(process.argv[process.argv.indexOf('--port') + 1]);
 
@@ -121,6 +127,7 @@ function startFakeServer(t) {
     getAssistantContext: () => ({}),
     localActions: {},
     broadcast: () => {},
+    spawnServer: spawnFakeServer,
   });
   t.after(async () => {
     await llm.stop();
@@ -167,7 +174,7 @@ test('repeated startup crashes trip the crash-loop brake', async (t) => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'kloppy-llm-test-'));
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
   const fakeModel = path.join(dir, 'fake.llamafile');
-  fs.writeFileSync(fakeModel, '#!/bin/sh\nexit 1\n', { mode: 0o755 });
+  fs.writeFileSync(fakeModel, 'process.exit(1);\n', { mode: 0o755 });
 
   const statuses = [];
   llm.init({
@@ -177,6 +184,7 @@ test('repeated startup crashes trip the crash-loop brake', async (t) => {
     getAssistantContext: () => ({}),
     localActions: {},
     broadcast: (status) => statuses.push(status),
+    spawnServer: spawnFakeServer,
   });
 
   const first = await llm.ask('why is the sky blue?');
@@ -204,7 +212,7 @@ test('startup failures are recorded in the server log', async (t) => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'kloppy-llm-test-'));
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
   const fakeModel = path.join(dir, 'fake.llamafile');
-  fs.writeFileSync(fakeModel, '#!/bin/sh\necho "boom: bad flags" >&2\nexit 1\n', { mode: 0o755 });
+  fs.writeFileSync(fakeModel, 'console.error("boom: bad flags");\nprocess.exit(1);\n', { mode: 0o755 });
 
   llm.init({
     getModelPath: () => fakeModel,
@@ -213,6 +221,7 @@ test('startup failures are recorded in the server log', async (t) => {
     getAssistantContext: () => ({}),
     localActions: {},
     broadcast: () => {},
+    spawnServer: spawnFakeServer,
   });
 
   await llm.ask('why is the sky blue?');

@@ -60,6 +60,7 @@ let profilePath = null;  // model path that profile was proven against
 let startFailures = 0;   // consecutive failed start() ladders; gates the crash-loop brake
 let idleTimer = null;    // pending idle shutdown, if any
 let pendingAction = null; // multi-turn local command, e.g. "Make a note" -> content next
+let spawnServer = spawn; // injectable: tests fake the llamafile with node scripts, which Windows can't exec directly
 
 // Internal runtime state: not-configured | idle | starting | ready | error
 // ("idle" = a model path is configured but the server hasn't been needed
@@ -75,6 +76,7 @@ function init(options) {
   getAssistantContext = options.getAssistantContext || null;
   localActions = options.localActions || null;
   broadcast = options.broadcast;
+  spawnServer = options.spawnServer || spawn;
   pendingAction = null;
   askInFlight = false;
   argsProfile = null;
@@ -700,7 +702,7 @@ async function startWithProfile(modelPath, profile) {
 
   const args = buildServerArgs(profile, port);
   try {
-    child = spawn(modelPath, args, {
+    child = spawnServer(modelPath, args, {
       stdio: ['ignore', 'pipe', 'pipe'],
       windowsHide: true,
       env: childEnv(),
