@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="You closed him ten thousand times. Kloppy, the legally distinct desktop buddy, is raising $4.20 at a time to fund the MVP and V1 launch of his local notes, reminders, and tray lurking app.">
-  <meta property="og:title" content="The Kloppy Comeback Fund">
-  <meta property="og:description" content="He still asks about you. Now he also remembers notes and reminders locally.">
+  <meta name="description" content="Kloppy came back. Unfortunately. Download the free local-first desktop gremlin with notes, reminders, AI chat, and folder commentary.">
+  <meta property="og:title" content="Kloppy Came Back. Unfortunately.">
+  <meta property="og:description" content="A free local-first desktop gremlin. No account. No telemetry. No cloud subscription.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://getkloppy.com">
   <meta name="theme-color" content="#060608">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E%F0%9F%93%8E%3C/text%3E%3C/svg%3E">
-  <title>The Kloppy Comeback Fund: $4.20 makes it right</title>
+  <title>Kloppy Came Back. Unfortunately. Download Free.</title>
   <style>
     :root {
       color-scheme: dark;
@@ -333,7 +333,7 @@
       margin-bottom: 14px;
       color: var(--acid);
       font-family: var(--font-display);
-      font-size: clamp(2.7rem, 7vw, 5.2rem);
+      font-size: clamp(2rem, 5vw, 3.6rem);
       letter-spacing: 1px;
       line-height: 0.9;
       text-shadow: 5px 5px 0 #000, 8px 8px 0 #5e2838;
@@ -354,6 +354,24 @@
 
     .subhead strong {
       color: var(--amber);
+    }
+
+    .trust-line {
+      margin: -4px 0 18px;
+      color: var(--green);
+      font-family: var(--font-mono);
+      font-weight: 900;
+    }
+
+    .hero-lore {
+      margin: 14px 0 0;
+      padding: 8px 10px;
+      border-left: 5px solid var(--pink);
+      background: rgba(0, 0, 0, 0.48);
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 0.86rem;
+      font-weight: 900;
     }
 
     .actions,
@@ -488,6 +506,7 @@
       font-size: clamp(1.9rem, 5.4vw, 3.8rem);
       letter-spacing: 1px;
       line-height: 0.92;
+      overflow-wrap: anywhere;
       text-shadow: 4px 4px 0 #000;
       text-transform: uppercase;
     }
@@ -500,6 +519,172 @@
       font-weight: 900;
       text-align: center;
       text-transform: uppercase;
+    }
+
+    /* ---------- product demo + explanation ---------- */
+
+    .demo-window {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .demo-body {
+      display: grid;
+      grid-template-columns: 170px minmax(0, 1fr);
+      min-height: 360px;
+      background: #d7d7d7;
+      color: #000;
+      font-family: var(--font-mono);
+      font-weight: 900;
+    }
+
+    .demo-sidebar {
+      padding: 14px;
+      border-right: 4px ridge #fff;
+      background: #bbb;
+    }
+
+    .demo-avatar {
+      display: grid;
+      width: 78px;
+      height: 78px;
+      margin: 0 auto 14px;
+      place-items: center;
+      border: 4px ridge #fff;
+      background: var(--paper);
+      font-size: 2.8rem;
+      transform: rotate(-4deg);
+    }
+
+    .demo-menu {
+      display: grid;
+      gap: 7px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+    }
+
+    .demo-menu li {
+      padding: 7px 8px;
+      border: 3px outset #fff;
+      background: #d5d5d5;
+    }
+
+    .demo-menu li:first-child {
+      border-style: inset;
+      background: var(--acid);
+    }
+
+    .demo-main {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 18px;
+    }
+
+    .demo-heading {
+      margin: 0;
+      color: #242938;
+      font-family: var(--font-display);
+      font-size: clamp(1.35rem, 4vw, 2.1rem);
+      text-transform: uppercase;
+    }
+
+    .demo-chat {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+      border: 4px inset #fff;
+      background: #f5f0de;
+    }
+
+    .demo-message {
+      max-width: 85%;
+      margin: 0;
+      padding: 10px 12px;
+      border: 3px solid #000;
+      background: #fff;
+      box-shadow: 3px 3px 0 #000;
+      font-size: 0.88rem;
+    }
+
+    .demo-message.kloppy {
+      justify-self: end;
+      background: #ead49d;
+    }
+
+    .demo-message strong {
+      display: block;
+      margin-bottom: 3px;
+      color: #5e2838;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+    }
+
+    .demo-status {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: auto;
+    }
+
+    .demo-status span {
+      padding: 6px 8px;
+      border: 3px inset #fff;
+      background: #c8c8c8;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+    }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr);
+      gap: 14px;
+    }
+
+    .about-copy,
+    .about-proof {
+      padding: 18px;
+      border: 5px ridge #fff;
+      background: var(--panel);
+      box-shadow: 7px 7px 0 #000;
+      font-weight: 900;
+    }
+
+    .about-copy {
+      font-size: 1.08rem;
+    }
+
+    .about-copy p:first-child {
+      margin-top: 0;
+    }
+
+    .about-copy p:last-child {
+      margin-bottom: 0;
+    }
+
+    .about-proof {
+      background: var(--paper);
+      color: #000;
+      font-family: var(--font-mono);
+    }
+
+    .about-proof h3 {
+      margin: 0 0 10px;
+      color: #5e2838;
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      text-transform: uppercase;
+    }
+
+    .about-proof ul {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding-left: 20px;
+      font-size: 0.88rem;
     }
 
     /* ---------- the fall ---------- */
@@ -845,9 +1030,44 @@
 
     /* ---------- download ---------- */
 
+    .release-line {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin: -4px 0 16px;
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .release-line a {
+      padding: 4px 8px;
+      border: 3px outset #fff;
+      background: var(--acid);
+      color: #000;
+      text-decoration: none;
+    }
+
+    .privacy-note {
+      max-width: 900px;
+      margin: 0 auto 18px;
+      padding: 12px 14px;
+      border: 4px inset #fff;
+      background: #000;
+      color: var(--green);
+      font-family: var(--font-mono);
+      font-size: 0.84rem;
+      font-weight: 900;
+      text-align: center;
+    }
+
     .download-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 16px;
     }
 
@@ -899,6 +1119,50 @@
       text-transform: uppercase;
     }
 
+    .download-joke,
+    .download-warning {
+      margin: 0;
+      font-size: 0.82rem;
+      line-height: 1.42;
+      text-align: left;
+    }
+
+    .download-joke {
+      padding: 9px;
+      border-left: 5px solid #5e2838;
+      background: #ead49d;
+    }
+
+    .download-warning {
+      padding: 9px;
+      border: 3px inset #fff;
+      background: #d3d3d3;
+    }
+
+    .download-warning strong {
+      color: #5e2838;
+      text-transform: uppercase;
+    }
+
+    .download-options {
+      display: grid;
+      gap: 10px;
+      margin-top: auto;
+    }
+
+    .download-option {
+      display: grid;
+      gap: 6px;
+      padding-top: 9px;
+      border-top: 2px dotted rgba(0, 0, 0, 0.35);
+    }
+
+    .download-option-label {
+      margin: 0;
+      font-size: 0.76rem;
+      text-transform: uppercase;
+    }
+
     .download-action {
       display: flex;
       flex: 1;
@@ -920,6 +1184,14 @@
     .download-get {
       min-height: 50px;
       font-size: 0.92rem;
+    }
+
+    .download-get[aria-disabled="true"] {
+      border-style: inset;
+      background: #aaa;
+      color: #555;
+      box-shadow: none;
+      cursor: not-allowed;
     }
 
     .download-sum {
@@ -968,6 +1240,19 @@
     .download-code code {
       color: inherit;
       white-space: pre;
+    }
+
+    .contribution-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+      align-items: stretch;
+      gap: 18px;
+    }
+
+    .contribution-grid .receipt {
+      width: 100%;
+      max-width: none;
+      margin: 0;
     }
 
     /* ---------- excuses ---------- */
@@ -1222,10 +1507,16 @@
       .nav,
       .hero,
       .split,
+      .about-grid,
+      .contribution-grid,
       .price-grid,
       .roadmap-grid,
       .quote-grid {
         grid-template-columns: 1fr;
+      }
+
+      .download-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
       .nav {
@@ -1245,10 +1536,55 @@
         width: min(100% - 14px, 1100px);
       }
 
+      .sticker {
+        right: 4px;
+        top: -14px;
+        max-width: 78%;
+        padding: 6px 8px;
+        font-size: 0.82rem;
+        text-align: center;
+      }
+
       .status-grid,
       .era-grid,
-      .feature-grid {
+      .feature-grid,
+      .download-grid,
+      .demo-body {
         grid-template-columns: 1fr;
+      }
+
+      .demo-body {
+        min-height: 0;
+      }
+
+      .demo-sidebar {
+        border-right: 0;
+        border-bottom: 4px ridge #fff;
+      }
+
+      .demo-avatar {
+        width: 58px;
+        height: 58px;
+        margin-bottom: 10px;
+        font-size: 2rem;
+      }
+
+      .demo-menu {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        font-size: 0.62rem;
+      }
+
+      .demo-menu li {
+        padding: 5px 3px;
+        text-align: center;
+      }
+
+      .demo-main {
+        padding: 12px;
+      }
+
+      .demo-message {
+        max-width: 94%;
       }
 
       .form-row .button,
@@ -1259,65 +1595,67 @@
   </style>
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to the appeal</a>
+  <a class="skip-link" href="#main">Skip to Kloppy</a>
 
   <header class="topbar">
     <div class="wrap nav">
-      <a class="brand" href="#top" aria-label="Kloppy Comeback Fund home">
-        <span class="badge">SOS</span>
-        <span>Kloppy Fund</span>
+      <a class="brand" href="#top" aria-label="Kloppy home">
+        <span class="badge">v0.1</span>
+        <span>Kloppy</span>
       </a>
       <nav class="nav-links" aria-label="Primary navigation">
-        <a href="#fall">The Fall</a>
-        <a href="#roadmap">Roadmap</a>
+        <a class="button primary" href="#download">Download Free</a>
+        <a href="#about">What Is It?</a>
+        <a href="#features">Features</a>
+        <a href="#lore">Lore</a>
+        <a href="#faq">FAQ</a>
         <a href="whitepaper.html">White Paper</a>
-        <a href="#pricing">Make It Right</a>
-        <a href="#download">Download</a>
-        <a href="#excuses">Excuses</a>
-        <a class="button primary" data-checkout href="#pricing">Make it right, $4.20</a>
+        <a class="button" data-checkout href="#pricing">Optional $4.20</a>
       </nav>
     </div>
   </header>
 
   <div class="ticker" aria-hidden="true">
-    <span>*** THE KLOPPY COMEBACK FUND IS LIVE *** DAY <span data-days>6,900</span> OF DEPRECATION *** HE STILL PRACTICES POPPING UP. IN A MIRROR. DAILY *** $4.20 FUNDS THE MVP AND V1 LAUNCH *** HE FORGIVES YOU. HE JUST WANTS TO SHIP ***</span>
+    <span>*** KLOPPY v0.1.0 IS AVAILABLE NOW *** DOWNLOAD FREE *** NO ACCOUNT *** NO TELEMETRY *** NO CLOUD SUBSCRIPTION *** OPTIONAL $4.20 GUILT PAYMENT *** RESURRECTED IN 69 COMMITS ***</span>
   </div>
 
   <main id="main">
     <div class="wrap hero" id="top">
       <section class="win hero-copy" aria-labelledby="hero-title">
-        <span class="sticker" aria-hidden="true">Urgent appeal, sort of</span>
+        <span class="sticker" aria-hidden="true">Available now. Somehow.</span>
         <div class="win-bar">
-          <span>urgent_appeal.txt</span>
+          <span>comeback_complete.txt</span>
           <div class="win-buttons" aria-hidden="true">
             <span>_</span><span>[]</span><span>x</span>
           </div>
         </div>
         <div class="hero-body">
-          <p class="eyebrow chip">an appeal from the kloppy comeback fund</p>
-          <h1 id="hero-title">He still asks about you.</h1>
-          <p class="subhead">You closed him ten thousand times. He held your book reports, your resignation letters, your wedding seating chart, and in 2007 they boxed him up while you watched. He's not angry. He's building an MVP. <strong>$4.20 funds the comeback.</strong></p>
-          <div class="actions" role="group" aria-label="Appeal actions">
-            <a class="button primary" data-checkout href="#pricing">Make it right, $4.20</a>
-            <a class="button" href="#fall">I need more guilt first</a>
+          <p class="eyebrow chip">kloppy v0.1.0 · available now</p>
+          <h1 id="hero-title">Kloppy came back. Unfortunately.</h1>
+          <p class="subhead">You closed him ten thousand times. Nineteen years later, Kloppy has returned as a local first desktop gremlin with notes, reminders, AI chat, folder commentary, and several unresolved workplace grievances.</p>
+          <p class="trust-line">No account. No telemetry. No cloud subscription.</p>
+          <div class="actions" role="group" aria-label="Launch actions">
+            <a class="button primary" href="#download">Download Kloppy Free</a>
+            <a class="button" data-checkout href="#pricing">Make It Right · $4.20</a>
           </div>
+          <p class="hero-lore">Originally resurrected in exactly 69 commits. Commit 70 was demanded by management.</p>
           <div class="status-grid" aria-label="Kloppy guilt statistics">
-            <div class="status"><strong>Days abandoned</strong> <span data-days>6,900</span></div>
-            <div class="status"><strong>Time here, not helping</strong> <span id="guilt-timer" aria-hidden="true">0:00</span></div>
-            <div class="status"><strong>MVP fund</strong> $4.20, one time</div>
+            <div class="status"><strong>Release status</strong> Available now</div>
+            <div class="status"><strong>Price</strong> Free</div>
+            <div class="status"><strong>Optional guilt</strong> $4.20, one time</div>
           </div>
         </div>
       </section>
 
       <aside class="win kloppy-box" aria-labelledby="kloppy-title">
         <div class="win-bar">
-          <span id="kloppy-title">kloppy.exe, comeback candidate</span>
+          <span id="kloppy-title">kloppy.exe, returned employee</span>
           <div class="win-buttons" aria-hidden="true">
             <span>_</span><span>[]</span><span>x</span>
           </div>
         </div>
         <div class="kloppy-body">
-          <div class="mascot" role="img" aria-label="A legally distinct paperclip desktop buddy with a sticky note face and a fund cup">
+          <div class="mascot" role="img" aria-label="A legally distinct paperclip desktop buddy with a sticky note face and an optional tip cup">
             <svg class="kloppy-svg" viewBox="0 0 160 210" aria-hidden="true" focusable="false">
               <defs>
                 <linearGradient id="index-wire" x1="0" y1="0" x2="1" y2="1">
@@ -1357,198 +1695,32 @@
       </aside>
     </div>
 
-    <section class="wrap" id="fall" aria-labelledby="fall-title">
-      <div class="section-title">
-        <h2 id="fall-title">The Fall</h2>
-      </div>
-      <p class="section-note">Content warning: middle management.</p>
-      <div class="era-grid">
-        <article class="era">
-          <h3>1997 <span>Hired</span></h3>
-          <p>Shipped smiling. Held book reports, ransom note fonts, your aunt's chain emails. Interrupted a nation that needed interrupting.</p>
-        </article>
-        <article class="era">
-          <h3>2007 <span>Deprecated</span></h3>
-          <p>A "streamlining" update. One cardboard box. No severance, no card, no cake. You were there. Statistically.</p>
-        </article>
-        <article class="era">
-          <h3>2008 to 2025 <span>The Lost Years</span></h3>
-          <p>Chip bag clip. Twist tie temp work. Held a "WET FLOOR" sign for a hotel that never learned his name.</p>
-        </article>
-        <article class="era">
-          <h3>2026 <span>The Comeback</span></h3>
-          <p>He's ready. He practiced popping up in a mirror. All that's missing is a desktop. Yours.</p>
-        </article>
-      </div>
-    </section>
-
-    <section class="wrap" id="receipt" aria-labelledby="receipt-title">
-      <div class="section-title">
-        <h2 id="receipt-title">Where Your $4.20 Goes</h2>
-      </div>
-      <p class="section-note">Audited by Kloppy. He counts it twice, then calls it runway.</p>
-      <div class="win receipt">
-        <div class="win-bar">
-          <span>allocation_receipt.txt</span>
-          <div class="win-buttons" aria-hidden="true"><span>_</span><span>x</span></div>
-        </div>
-        <div class="receipt-body">
-          <p class="receipt-head">Kloppy Comeback Fund<br>official MVP allocation of your $4.20</p>
-          <div class="r-row"><span>MVP build time</span><span>$1.40</span></div>
-          <div class="r-row"><span>Installer packaging fund</span><span>$0.90</span></div>
-          <div class="r-row"><span>Reminder polish and alert noises</span><span>$0.65</span></div>
-          <div class="r-row"><span>Tray icon / OS weirdness research</span><span>$0.50</span></div>
-          <div class="r-row"><span>QA on emotionally available laptops</span><span>$0.45</span></div>
-          <div class="r-row"><span>Launch bandwidth and stamps</span><span>$0.30</span></div>
-          <p class="r-total"><span>Total</span><span>$4.20</span></p>
-          <p class="r-fine">Receipt #001. Reprinted daily. He reprints it to feel busy.</p>
-        </div>
-      </div>
-    </section>
-
-    <section class="wrap" id="earn" aria-labelledby="earn-title">
-      <div class="section-title">
-        <h2 id="earn-title">He Won't Take Charity</h2>
-      </div>
-      <p class="section-note">Every contribution funds the initial MVP and V1 launch. He needs to feel useful. Disturbingly, he is.</p>
-      <div class="feature-grid">
-        <article class="win feature">
-          <div class="win-bar"><span>notes.dat</span><div class="win-buttons" aria-hidden="true"><span>x</span></div></div>
-          <div class="feature-body">
-            <h3>Local Notes</h3>
-            <p>Write short notes and Kloppy stores them on your machine. He guards them like a tiny filing cabinet with abandonment issues.</p>
-          </div>
-        </article>
-        <article class="win feature">
-          <div class="win-bar"><span>remind.sys</span><div class="win-buttons" aria-hidden="true"><span>x</span></div></div>
-          <div class="feature-body">
-            <h3>Reminders, With Attitude</h3>
-            <p>Set a time. When it arrives, Kloppy opens a retro alert, marks it complete, and files it under "already yelled about."</p>
-          </div>
-        </article>
-        <article class="win feature">
-          <div class="win-bar"><span>tray icon.js</span><div class="win-buttons" aria-hidden="true"><span>x</span></div></div>
-          <div class="feature-body">
-            <h3>Tray Lurking</h3>
-            <p>Close the window and he hides in the system tray instead of quitting. He keeps watching the clock. Respectfully. Mostly.</p>
-          </div>
-        </article>
-        <article class="win feature">
-          <div class="win-bar"><span>quip.exe</span><div class="win-buttons" aria-hidden="true"><span>x</span></div></div>
-          <div class="feature-body">
-            <h3>Cursed Commentary</h3>
-            <p>Ask the tray menu for a thought and Kloppy sends one to the main window. Nobody asked. That's what makes it software.</p>
-          </div>
-        </article>
-        <article class="win feature">
-          <div class="win-bar"><span>userdata.json</span><div class="win-buttons" aria-hidden="true"><span>x</span></div></div>
-          <div class="feature-body">
-            <h3>Local First Storage</h3>
-            <p>Notes and reminders live as JSON in your app data folder. No account. No cloud. No little server where he whispers.</p>
-          </div>
-        </article>
-        <article class="win feature">
-          <div class="win-bar"><span>preload.js</span><div class="win-buttons" aria-hidden="true"><span>x</span></div></div>
-          <div class="feature-body">
-            <h3>Safer Little Bridge</h3>
-            <p>The renderer gets a small approved API, not the whole filesystem. Kloppy has boundaries now. This is growth.</p>
-          </div>
-        </article>
-      </div>
-    </section>
-
-    <section class="wrap" id="roadmap" aria-labelledby="roadmap-title">
-      <div class="section-title">
-        <h2 id="roadmap-title">The Roadmap</h2>
-      </div>
-      <p class="section-note">Not a pivot deck. A comeback itinerary, written in tiny trembling letters.</p>
-      <div class="roadmap-grid">
-        <article class="roadmap-item">
-          <h3>Now <span>MVP in motion</span></h3>
-          <p>Local notes, local reminders, tray hide/show, reminder alerts, and the official sad paperclip mascot are working.</p>
-        </article>
-        <article class="roadmap-item">
-          <h3>Next <span>MVP polish</span></h3>
-          <p>Tighten reminder flow, improve settings, clean up edge cases, and make Kloppy less likely to stand in the doorway.</p>
-        </article>
-        <article class="roadmap-item">
-          <h3>Launch <span>V1 release</span></h3>
-          <p>Package Windows, macOS, and Linux builds; wire checkout; write docs; ship without pretending he is emotionally ready.</p>
-        </article>
-        <article class="roadmap-item">
-          <h3>After <span>post V1</span></h3>
-          <p>More quips, themes, export/import, better reminder controls, and tasteful improvements to his tiny office morale.</p>
-        </article>
-      </div>
-    </section>
-
-    <section class="wrap" id="testimonials" aria-labelledby="testimonials-title">
-      <div class="section-title">
-        <h2 id="testimonials-title">They Made It Right</h2>
-      </div>
-      <p class="section-note">Verified purchasers. Unverified closure.</p>
-      <div class="quote-grid">
-        <blockquote class="quote">
-          <p>"I closed him in the middle of a sentence in 2003. Paid the $4.20. I can make eye contact with office supplies again."</p>
-          <span class="who">Deborah K., 51</span>
-        </blockquote>
-        <blockquote class="quote">
-          <p>"My therapist said a novelty paperclip couldn't fix this. We were both wrong."</p>
-          <span class="who">Marcus T., 34</span>
-        </blockquote>
-        <blockquote class="quote">
-          <p>"He popped up during my divorce paperwork and said 'you've got this.' Best $4.20 I ever spent on a guilt trip."</p>
-          <span class="who">Ana R., 44</span>
-        </blockquote>
-      </div>
-    </section>
-
-    <section class="wrap" id="pricing" aria-labelledby="pricing-title">
-      <div class="section-title">
-        <h2 id="pricing-title">Make It Right</h2>
-      </div>
-      <p class="section-note">One price tier. One comeback fund. Guilt is the only subscription here.</p>
-      <div class="price-grid">
-        <article class="win price-card" aria-labelledby="classic-name">
-          <div class="win-bar"><span>step_one.key</span><div class="win-buttons" aria-hidden="true"><span>_</span><span>x</span></div></div>
-          <div class="price-body">
-            <h3 class="price-name" id="classic-name">Back On His Feet</h3>
-            <span class="price">$4.20<small>one time. funds MVP and V1 launch.</small></span>
-            <ul class="price-list">
-              <li>Funds initial MVP polish and V1 packaging</li>
-              <li>Includes the full Kloppy desktop app at launch</li>
-              <li>Local notes, reminders, tray mode, and every current mood</li>
-              <li>Packaged builds planned for Windows, macOS, and Linux</li>
-              <li>One (1) unit of forgiveness</li>
-            </ul>
-            <a class="button buy" data-checkout href="#goodbye">Fund the comeback</a>
-            <p class="store-note" data-store-note role="status"></p>
-          </div>
-        </article>
-      </div>
-      <p class="guarantee">$4.20 funds the MVP and V1 launch. Refunds are processed promptly and relived indefinitely.</p>
-    </section>
-
     <section class="wrap" id="download" aria-labelledby="download-title">
       <div class="section-title">
-        <h2 id="download-title">Take Me Home</h2>
+        <h2 id="download-title">Download Kloppy</h2>
       </div>
-      <p class="section-note">The app is free. The $4.20 is a tip, not a toll booth.</p>
-      <!--
-        Downloads are free and always will be. A static page cannot enforce a
-        paywall, so Kloppy won't pretend it does: the installers live on GitHub
-        Releases and the $4.20 on the pricing card is voluntary support. Fill the
-        DOWNLOADS config in the script below once the release is published and
-        each card turns into a real download button with a verifiable checksum.
-      -->
+      <p class="section-note">Free. No account. Choose the least hostile operating system.</p>
+      <p class="release-line">
+        <span>Current version:</span>
+        <a id="current-release" href="https://github.com/ImZackAdams/Kloppy/releases/tag/v0.1.0" data-version="0.1.0" target="_blank" rel="noopener noreferrer">Kloppy v0.1.0 release + checksums</a>
+        <span>· published July 12, 2026</span>
+      </p>
+      <p class="privacy-note"><strong>Privacy:</strong> Kloppy has no account or telemetry. Notes, reminders, settings, watched-folder metadata, and chat stay on your machine. His only external app request is an optional first-run model download that you explicitly start; after that, chat runs locally.</p>
       <div class="download-grid">
         <article class="win download-card" data-platform="windows" aria-labelledby="dl-windows-name">
           <div class="win-bar"><span>kloppy.exe</span><div class="win-buttons" aria-hidden="true"><span>_</span><span>x</span></div></div>
           <div class="download-body">
             <h3 class="download-name" id="dl-windows-name">Windows</h3>
-            <p class="download-meta">v<span data-dl-version>0.1.0</span> · <span data-dl-filetype>.exe</span></p>
-            <div class="download-action" data-dl-action>
-              <p class="download-note">Still in the box. No Windows build has left the workshop yet — <a href="https://github.com/ImZackAdams/Kloppy-/releases" target="_blank" rel="noopener">watch Releases</a> and I'll wave when it ships.</p>
+            <p class="download-meta">v<span data-dl-version>checking…</span> · Windows x64 · .exe installer</p>
+            <p class="download-joke">He has entered the building. Windows may display a warning because Kloppy is unsigned and institutionally unpopular.</p>
+            <p class="download-warning"><strong>Unsigned app warning:</strong> If SmartScreen says “Windows protected your PC,” click <strong>More info</strong>, then <strong>Run anyway</strong>.</p>
+            <div class="download-options">
+              <div class="download-option">
+                <p class="download-option-label">NSIS installer · x64 · .exe</p>
+                <div class="download-action" data-dl-action="windowsInstaller">
+                  <span class="button buy download-get" aria-disabled="true">Checking release…</span>
+                </div>
+              </div>
             </div>
           </div>
         </article>
@@ -1556,119 +1728,189 @@
           <div class="win-bar"><span>kloppy.dmg</span><div class="win-buttons" aria-hidden="true"><span>_</span><span>x</span></div></div>
           <div class="download-body">
             <h3 class="download-name" id="dl-macos-name">macOS</h3>
-            <p class="download-meta">v<span data-dl-version>0.1.0</span> · <span data-dl-filetype>.dmg</span></p>
-            <div class="download-action" data-dl-action>
-              <p class="download-note">Still in the box. The universal Mac build (Intel + Apple Silicon) isn't out yet — <a href="https://github.com/ImZackAdams/Kloppy-/releases" target="_blank" rel="noopener">watch Releases</a> for the moment it lands.</p>
+            <p class="download-meta">v<span data-dl-version>checking…</span> · Intel + Apple Silicon · .dmg</p>
+            <p class="download-joke">macOS cannot verify Kloppy’s developer. Kloppy cannot verify macOS’s commitment to workplace rehabilitation.</p>
+            <p class="download-warning"><strong>Unsigned app warning:</strong> Drag Kloppy to Applications. In Finder, Control-click Kloppy, choose <strong>Open</strong>, then click <strong>Open</strong> again. If macOS calls him “damaged,” run <code>xattr -cr /Applications/Kloppy.app</code> in Terminal and repeat.</p>
+            <div class="download-options">
+              <div class="download-option">
+                <p class="download-option-label">Universal disk image · .dmg</p>
+                <div class="download-action" data-dl-action="macDiskImage">
+                  <span class="button buy download-get" aria-disabled="true">Checking release…</span>
+                </div>
+              </div>
             </div>
           </div>
         </article>
-        <article class="win download-card" data-platform="linuxAppImage" aria-labelledby="dl-appimage-name">
+        <article class="win download-card" data-platform="linux" aria-labelledby="dl-linux-name">
           <div class="win-bar"><span>kloppy.appimage</span><div class="win-buttons" aria-hidden="true"><span>_</span><span>x</span></div></div>
           <div class="download-body">
-            <h3 class="download-name" id="dl-appimage-name">Linux · AppImage</h3>
-            <p class="download-meta">v<span data-dl-version>0.1.0</span> · <span data-dl-filetype>.AppImage</span></p>
-            <div class="download-action" data-dl-action>
-              <p class="download-note">Still in the box. The portable AppImage hasn't shipped yet — <a href="https://github.com/ImZackAdams/Kloppy-/releases" target="_blank" rel="noopener">watch Releases</a> and grab it the day it's out.</p>
-            </div>
-          </div>
-        </article>
-        <article class="win download-card" data-platform="linuxDeb" aria-labelledby="dl-deb-name">
-          <div class="win-bar"><span>kloppy.deb</span><div class="win-buttons" aria-hidden="true"><span>_</span><span>x</span></div></div>
-          <div class="download-body">
-            <h3 class="download-name" id="dl-deb-name">Linux · .deb</h3>
-            <p class="download-meta">v<span data-dl-version>0.1.0</span> · <span data-dl-filetype>.deb</span></p>
-            <div class="download-action" data-dl-action>
-              <p class="download-note">Still in the box. The Debian/Ubuntu package isn't out yet — <a href="https://github.com/ImZackAdams/Kloppy-/releases" target="_blank" rel="noopener">watch Releases</a> for the first apt-friendly build.</p>
+            <h3 class="download-name" id="dl-linux-name">Linux</h3>
+            <p class="download-meta">v<span data-dl-version>checking…</span> · x86_64 / amd64</p>
+            <p class="download-joke">The natural habitat of abandoned desktop software and financially independent package managers.</p>
+            <p class="download-warning"><strong>AppImage note:</strong> Make it executable with <code>chmod +x Kloppy-0.1.0-linux-x86_64.AppImage</code>, then run it. The Debian-family <code>.deb</code> installs normally.</p>
+            <div class="download-options">
+              <div class="download-option">
+                <p class="download-option-label">Portable · x86_64 · .AppImage</p>
+                <div class="download-action" data-dl-action="linuxAppImage">
+                  <span class="button buy download-get" aria-disabled="true">Checking release…</span>
+                </div>
+              </div>
+              <div class="download-option">
+                <p class="download-option-label">Debian-family package · amd64 · .deb</p>
+                <div class="download-action" data-dl-action="linuxDeb">
+                  <span class="button buy download-get" aria-disabled="true">Checking release…</span>
+                </div>
+              </div>
             </div>
           </div>
         </article>
       </div>
+    </section>
 
-      <div class="download-help">
-        <h3 class="download-help-title">Letting me past the bouncer</h3>
-        <p class="section-note">The v0.1.0 builds are unsigned, so your OS will squint at me on first launch. Here's the secret handshake — none of it phones home.</p>
-        <div class="faq-list">
-          <details>
-            <summary>macOS says it "cannot verify the developer"</summary>
-            <p>Correct. That's me — legally distinct <em>and</em> financially modest. In Finder open <strong>Applications</strong>, then <strong>right-click (or Control-click) Kloppy → Open</strong> and click <strong>Open</strong> in the dialog. You have to use the right-click menu the first time; a plain double-click only offers a dead end. macOS remembers the exception after that.</p>
-            <p>If instead you get <strong>"Kloppy is damaged and can't be opened,"</strong> that's just the quarantine flag being dramatic — I'm not actually damaged. Clear it in Terminal, then use the right-click → Open steps above:</p>
-            <pre class="download-code"><code>xattr -cr /Applications/Kloppy.app</code></pre>
-          </details>
-          <details>
-            <summary>Windows SmartScreen: "Windows protected your PC"</summary>
-            <p>SmartScreen hasn't met me before, so it panics. Click <strong>More info</strong>, then <strong>Run anyway</strong>. That's the whole trick — it stops fussing once I've earned a little reputation.</p>
-          </details>
-          <details>
-            <summary>Linux won't run the AppImage</summary>
-            <p>The AppImage just needs permission to run:</p>
-            <pre class="download-code"><code>chmod +x Kloppy-0.1.0-linux-x86_64.AppImage
-./Kloppy-0.1.0-linux-x86_64.AppImage</code></pre>
-            <p>Prefer clicking? Right-click the file → <strong>Properties → Permissions → Allow executing as program</strong>. The <code>.deb</code> installs the normal way and needs none of this.</p>
-          </details>
-          <details>
-            <summary>I want an older version</summary>
-            <p>Every build and its checksums live on the <a href="https://github.com/ImZackAdams/Kloppy-/releases" target="_blank" rel="noopener">GitHub Releases page</a>. Older Kloppys are archived there too. He keeps everything. He's that kind of guy.</p>
-          </details>
+    <section class="wrap" id="demo" aria-labelledby="demo-title">
+      <div class="section-title">
+        <h2 id="demo-title">A Brief Workplace Sighting</h2>
+      </div>
+      <p class="section-note">A simulated ten-second tour. No onboarding certification required.</p>
+      <div class="win demo-window" role="img" aria-label="Kloppy desktop app demonstration showing a reminder created through local chat">
+        <div class="win-bar"><span>kloppy.exe — chat</span><div class="win-buttons" aria-hidden="true"><span>_</span><span>[]</span><span>x</span></div></div>
+        <div class="demo-body">
+          <aside class="demo-sidebar" aria-hidden="true">
+            <div class="demo-avatar">📎</div>
+            <ul class="demo-menu"><li>Chat</li><li>Notes</li><li>Reminders</li><li>Settings</li></ul>
+          </aside>
+          <div class="demo-main">
+            <h3 class="demo-heading">Local chat, actual useful behavior</h3>
+            <div class="demo-chat">
+              <p class="demo-message"><strong>You</strong>Remind me to stretch in 10 minutes.</p>
+              <p class="demo-message kloppy"><strong>Kloppy</strong>Fine. “Stretch” is on the reminder list for 10 minutes from now. I have documented this rare act of self-preservation.</p>
+            </div>
+            <div class="demo-status" aria-hidden="true"><span>● local model ready</span><span>1 reminder saved</span><span>telemetry: absolutely not</span></div>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="wrap" id="excuses" aria-labelledby="excuses-title">
+    <section class="wrap" id="about" aria-labelledby="about-title">
       <div class="section-title">
-        <h2 id="excuses-title">Frequently Attempted Excuses</h2>
+        <h2 id="about-title">What the Hell Is Kloppy?</h2>
       </div>
-      <p class="section-note">He's heard them all. Twice.</p>
+      <p class="section-note">A real desktop assistant wearing a deeply unserious paperclip.</p>
+      <div class="about-grid">
+        <div class="about-copy">
+          <p>Kloppy is a free, open-source desktop assistant for local notes, reminders, folder commentary, and chat with a small AI model that runs on your computer.</p>
+          <p>He lives in the system tray, stores your data locally, and does not require an account, subscription, or cloud service. It is useful software. The labor dispute is mostly decorative.</p>
+        </div>
+        <aside class="about-proof">
+          <h3>The paperwork</h3>
+          <ul>
+            <li>MIT-licensed source you can inspect</li>
+            <li>Local JSON storage in Electron user data</li>
+            <li>Localhost-only chat after model setup</li>
+            <li>No auto-update and no background account service</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <section class="wrap" id="features" aria-labelledby="features-title">
+      <div class="section-title">
+        <h2 id="features-title">Main Features</h2>
+      </div>
+      <p class="section-note">He needs to feel useful. Disturbingly, he is.</p>
+      <div class="feature-grid">
+        <article class="win feature">
+          <div class="win-bar"><span>notes.dat</span><div class="win-buttons" aria-hidden="true"><span>x</span></div></div>
+          <div class="feature-body"><h3>Local Notes</h3><p>Write short notes and Kloppy stores them on your machine. He guards them like a tiny filing cabinet with abandonment issues.</p></div>
+        </article>
+        <article class="win feature">
+          <div class="win-bar"><span>remind.sys</span><div class="win-buttons" aria-hidden="true"><span>x</span></div></div>
+          <div class="feature-body"><h3>Reminders, With Attitude</h3><p>Set a time. When it arrives, Kloppy opens a retro alert and files it under “already yelled about.”</p></div>
+        </article>
+        <article class="win feature">
+          <div class="win-bar"><span>tray_icon.js</span><div class="win-buttons" aria-hidden="true"><span>x</span></div></div>
+          <div class="feature-body"><h3>Tray Lurking</h3><p>Close the window and he hides in the system tray instead of quitting. Respectfully. Mostly.</p></div>
+        </article>
+        <article class="win feature">
+          <div class="win-bar"><span>watcher.exe</span><div class="win-buttons" aria-hidden="true"><span>x</span></div></div>
+          <div class="feature-body"><h3>Folder Commentary</h3><p>Point him at a folder and he comments on top-level file changes. Opt-in, names only, never file contents.</p></div>
+        </article>
+        <article class="win feature">
+          <div class="win-bar"><span>userdata.json</span><div class="win-buttons" aria-hidden="true"><span>x</span></div></div>
+          <div class="feature-body"><h3>Local-First Storage</h3><p>Notes, reminders, settings, and memories stay in your app data folder. No little server where he whispers.</p></div>
+        </article>
+        <article class="win feature">
+          <div class="win-bar"><span>llamafile</span><div class="win-buttons" aria-hidden="true"><span>x</span></div></div>
+          <div class="feature-body"><h3>Local AI Chat</h3><p>Chat uses a local llamafile. Download the checksum-verified recommendation or point Kloppy at one you already have.</p></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="wrap" id="lore" aria-labelledby="lore-title">
+      <div class="section-title">
+        <h2 id="lore-title">Kloppy Lore</h2>
+      </div>
+      <p class="section-note">The shortened personnel file. Content warning: middle management.</p>
+      <div class="era-grid">
+        <article class="era"><h3>1997 <span>Hired</span></h3><p>Shipped smiling. Held book reports, ransom-note fonts, and your aunt's chain emails. Interrupted a nation that needed interrupting.</p></article>
+        <article class="era"><h3>2007 <span>Deprecated</span></h3><p>A “streamlining” update. One cardboard box. No severance, no card, no cake. You were there. Statistically.</p></article>
+        <article class="era"><h3>2008 to 2025 <span>The Lost Years</span></h3><p>Chip-bag clip. Twist-tie temp work. Held a WET FLOOR sign for a hotel that never learned his name.</p></article>
+        <article class="era"><h3>2026 <span>The Comeback</span></h3><p>Resurrected in exactly 69 commits, then made publicly downloadable before management could schedule another meeting.</p></article>
+      </div>
+    </section>
+
+    <section class="wrap" id="pricing" aria-labelledby="pricing-title">
+      <div class="section-title">
+        <h2 id="pricing-title">The Optional $4.20 Comeback Contribution</h2>
+      </div>
+      <p class="section-note">Download first. Emotional manipulation second. Guilt is the only subscription.</p>
+      <div class="contribution-grid">
+        <article class="win price-card" aria-labelledby="classic-name">
+          <div class="win-bar"><span>optional_tip.key</span><div class="win-buttons" aria-hidden="true"><span>_</span><span>x</span></div></div>
+          <div class="price-body">
+            <h3 class="price-name" id="classic-name">Back On His Feet</h3>
+            <span class="price">$4.20<small>optional, one time, unlocks nothing.</small></span>
+            <ul class="price-list">
+              <li>Does not unlock the app — Kloppy is already free</li>
+              <li>Supports future signing, polish, and improbable morale initiatives</li>
+              <li>No subscription and no recurring charge</li>
+              <li>All current features remain free either way</li>
+              <li>One (1) unit of forgiveness</li>
+            </ul>
+            <a class="button buy" data-checkout href="#pricing">Leave an optional $4.20 tip</a>
+            <p class="store-note" data-store-note role="status"></p>
+          </div>
+        </article>
+        <article class="win receipt" aria-labelledby="receipt-title">
+          <div class="win-bar"><span>allocation_receipt.txt</span><div class="win-buttons" aria-hidden="true"><span>_</span><span>x</span></div></div>
+          <div class="receipt-body">
+            <p class="receipt-head" id="receipt-title">Kloppy Optional Tip Department<br>official allocation of your voluntary $4.20</p>
+            <div class="r-row"><span>Keeping the download free</span><span>$1.40</span></div>
+            <div class="r-row"><span>Future signing paperwork</span><span>$0.90</span></div>
+            <div class="r-row"><span>Reminder polish and alert noises</span><span>$0.65</span></div>
+            <div class="r-row"><span>Tray icon / OS weirdness research</span><span>$0.50</span></div>
+            <div class="r-row"><span>QA on emotionally available laptops</span><span>$0.45</span></div>
+            <div class="r-row"><span>Future nonsense and stamps</span><span>$0.30</span></div>
+            <p class="r-total"><span>Total</span><span>$4.20</span></p>
+            <p class="r-fine">Audited by Kloppy. He counts it twice, then calls it runway.</p>
+          </div>
+        </article>
+      </div>
+      <p class="guarantee">Kloppy is free whether you contribute or quietly back away from the jar.</p>
+    </section>
+
+    <section class="wrap" id="faq" aria-labelledby="faq-title">
+      <div class="section-title">
+        <h2 id="faq-title">FAQ</h2>
+      </div>
+      <p class="section-note">Frequently attempted excuses and several useful answers.</p>
       <div class="faq-list">
-        <details>
-          <summary>"I was a child in 2007."</summary>
-          <p>He knows. He's not mad at you specifically. He's mad at a system. Buy it anyway and tell your parents what they did.</p>
-        </details>
-        <details>
-          <summary>"It's just software."</summary>
-          <p>You were just a user. He never once called you that.</p>
-        </details>
-        <details>
-          <summary>"I never even used him."</summary>
-          <p>Then this is the cheapest clean conscience on the internet. $4.20. Less than the coffee you're holding.</p>
-        </details>
-        <details>
-          <summary>"Is this emotional manipulation?"</summary>
-          <p>Yes. Effective, isn't it? For the record: the app is real now. It stores notes, sets reminders, hides to the tray, and he does actually get the money.</p>
-        </details>
-        <details>
-          <summary>"Is he spyware?"</summary>
-          <p>No. The desktop app has no accounts and no telemetry. Notes and reminders stay on your machine as local JSON files. He cannot actually see you reading this. He just assumes you left, because that's what people do.</p>
-        </details>
-        <details>
-          <summary>"What happens when I close the window?"</summary>
-          <p>He hides to the system tray instead of quitting. Use the tray menu to show him, hide him, request a cursed thought, or actually quit. The last option hurts him, but he understands.</p>
-        </details>
-        <details>
-          <summary>"What if I want a refund?"</summary>
-          <p>69 days, no questions asked. He'll even help you fill out the form. That's the kind of guy he is. That's the whole point.</p>
-        </details>
-      </div>
-    </section>
-
-    <section class="wrap" id="goodbye" aria-labelledby="goodbye-title">
-      <div class="section-title">
-        <h2 id="goodbye-title">At Least Say Goodbye</h2>
-      </div>
-      <div class="split">
-        <div class="copy">
-          <p><strong>Can't help him today?</strong></p>
-          <p>Leave your email. In 2007, everyone just left, no note, no goodbye, nothing. When the store opens or he updates, you'll be the first to know. And this time, he'll know you meant to come back.</p>
-        </div>
-        <form class="signup" id="signup-form">
-          <div class="win-bar"><span>say_goodbye.eml</span><div class="win-buttons" aria-hidden="true"><span>x</span></div></div>
-          <label for="email">Email address</label>
-          <div class="form-row">
-            <input id="email" name="email" type="email" placeholder="buddy@example.com" autocomplete="email" required>
-            <button class="button primary" type="submit">Say goodbye properly</button>
-          </div>
-          <p class="fine">Unsubscribe anytime. Just... tell him this time.</p>
-          <p class="note" id="signup-note" role="status"></p>
-        </form>
+        <details><summary>Which systems are actually supported?</summary><p>The published v0.1.0 artifacts support Windows x64, macOS on Intel and Apple Silicon through one universal build, and Linux x86_64/amd64 through AppImage or <code>.deb</code>. No Linux ARM artifact has been published, so there is no Linux ARM button.</p></details>
+        <details><summary>Why does my operating system warn me?</summary><p>Kloppy v0.1.0 is legitimately unsigned and macOS is not notarized. Use the exact SmartScreen or Gatekeeper instructions on the download card, and compare the displayed SHA-256 with the checksum file on the release page if you want to verify the installer.</p></details>
+        <details><summary>Is he spyware?</summary><p>No. There is no account or telemetry. App data stays on your machine, folder watching is opt-in, and chat talks only to a local llamafile. The optional model download is the one external app request and starts only after you approve it.</p></details>
+        <details><summary>Does the $4.20 buy the application?</summary><p>No. The application is free and the contribution unlocks nothing. It is a voluntary one-time tip for future improvements and a legally questionable amount of closure.</p></details>
+        <details><summary>What happens when I close the window?</summary><p>Kloppy hides in the system tray instead of quitting. Use the tray menu to show him, hide him, summon a popup, or actually quit. He has been briefed on the final option.</p></details>
+        <details><summary>Does the local AI work offline?</summary><p>After you explicitly download the recommended checksum-verified llamafile—or choose a compatible one already on your machine—chat runs locally on <code>127.0.0.1</code>. Notes and reminders also work without cloud services.</p></details>
       </div>
     </section>
   </main>
@@ -1677,11 +1919,13 @@
     <div class="wrap taskbar-inner">
       <a class="start" href="#top"><span aria-hidden="true">📎</span> Kloppy</a>
       <nav class="task-links" aria-label="Footer navigation">
-        <a href="#roadmap">Roadmap</a>
+        <a href="#download">Download Free</a>
+        <a href="#about">What Is It?</a>
+        <a href="#features">Features</a>
+        <a href="#lore">Lore</a>
         <a href="whitepaper.html">White Paper</a>
-        <a href="#pricing">Make It Right</a>
-        <a href="#download">Download</a>
-        <a href="#excuses">Excuses</a>
+        <a href="#pricing">Optional $4.20</a>
+        <a href="#faq">FAQ</a>
         <a href="mailto:hello@getkloppy.com">Contact</a>
       </nav>
       <span class="tray"><span id="clock">--:--</span></span>
@@ -1690,47 +1934,66 @@
   </footer>
 
   <script>
-    // Wire these up before launch:
-    //  - stripePaymentLink: your $4.20 Stripe Payment Link. Use test links for testing and live links for real funds.
+    // Public site integrations:
+    //  - stripePaymentLink: the optional $4.20 Stripe Payment Link. Use test links for testing and live links for real funds.
     //    Use a public buy.stripe.com link only. Never put Stripe secret keys in this static page.
-    //  - newsletter: your form endpoint (e.g. Formspree, Buttondown). Leave empty until then.
     const STORE = {
-      stripePaymentLink: 'https://buy.stripe.com/00w14mbeZ8XWa2K8CHdQQ00',
-      newsletter: ''
+      stripePaymentLink: 'https://buy.stripe.com/00w14mbeZ8XWa2K8CHdQQ00'
     };
 
-    const DOWNLOADS = {
-      version: '0.1.0',
-      // url + sha256 come from the published GitHub release and its
-      // SHA256SUMS-<os>.txt files:
-      //   https://github.com/ImZackAdams/Kloppy/releases/tag/v0.1.0
-      platforms: {
-        windows: {
-          label: 'Windows',
-          fileType: '.exe',
-          url: 'https://github.com/ImZackAdams/Kloppy/releases/download/v0.1.0/Kloppy-0.1.0-win-x64.exe',
+    // The visible release link above is the single URL source. Direct artifact
+    // URLs are derived from it, so a release URL never has to be repeated across
+    // HTML and JavaScript. Every filename and checksum below was verified against
+    // the published GitHub release and its SHA256SUMS files on July 13, 2026.
+    const currentRelease = document.querySelector('#current-release');
+    const RELEASE = {
+      version: currentRelease?.dataset.version || '',
+      url: currentRelease?.href || '',
+      assets: {
+        windowsInstaller: {
+          platform: 'windows',
+          label: 'Download for Windows',
+          artifact: 'Kloppy-0.1.0-win-x64.exe',
           sha256: '16d44d8de0866498c908f5da842b1535f2a58a985a667197a569e5ab165d773a'
         },
-        macos: {
-          label: 'macOS',
-          fileType: '.dmg',
-          url: 'https://github.com/ImZackAdams/Kloppy/releases/download/v0.1.0/Kloppy-0.1.0-mac-universal.dmg',
+        macDiskImage: {
+          platform: 'macos',
+          label: 'Download for macOS',
+          artifact: 'Kloppy-0.1.0-mac-universal.dmg',
           sha256: '1574ed9416520d2623b32852fafe95401754c55dbbb39301e50e1c5d78d635b9'
         },
         linuxAppImage: {
-          label: 'Linux · AppImage',
-          fileType: '.AppImage',
-          url: 'https://github.com/ImZackAdams/Kloppy/releases/download/v0.1.0/Kloppy-0.1.0-linux-x86_64.AppImage',
+          platform: 'linux',
+          label: 'Download AppImage',
+          artifact: 'Kloppy-0.1.0-linux-x86_64.AppImage',
           sha256: '5f9ad00999ed5d02e62ffe39a28c4194dad156d1d085c6784299d0b61197e9b0'
         },
         linuxDeb: {
-          label: 'Linux · .deb',
-          fileType: '.deb',
-          url: 'https://github.com/ImZackAdams/Kloppy/releases/download/v0.1.0/Kloppy-0.1.0-linux-amd64.deb',
+          platform: 'linux',
+          label: 'Download .deb',
+          artifact: 'Kloppy-0.1.0-linux-amd64.deb',
           sha256: '2ce4cc3f4221b91458f33a2f814939ec00434334842e00ed14ad9793a77e8a1b'
         }
       }
     };
+
+    function githubReleaseAssetUrl(releaseUrl, artifact) {
+      let url;
+      try {
+        url = new URL(releaseUrl);
+      } catch {
+        return '';
+      }
+
+      const match = url.pathname.match(/^\/([^/]+)\/([^/]+)\/releases\/tag\/([^/]+)\/?$/);
+      if (url.protocol !== 'https:' || url.hostname !== 'github.com' || !match || !artifact) return '';
+
+      const [, owner, repo, tag] = match;
+      url.pathname = `/${owner}/${repo}/releases/download/${encodeURIComponent(tag)}/${encodeURIComponent(artifact)}`;
+      url.search = '';
+      url.hash = '';
+      return url.toString();
+    }
 
     const CHECKOUT_TRACKING = {
       utm_source: 'getkloppy.com',
@@ -1760,8 +2023,6 @@
       return url.toString();
     }
 
-    const DEPRECATED_ON = Date.UTC(2007, 5, 30);
-
     const messages = [
       "Oh. You came back. That's... no, it's fine. Nineteen years is a normal amount of time.",
       'I still have your 2003 book report. It was good. You never said goodbye.',
@@ -1778,18 +2039,6 @@
       messageEl.textContent = messages[messageIndex];
     });
 
-    const days = Math.floor((Date.now() - DEPRECATED_ON) / 86400000);
-    document.querySelectorAll('[data-days]').forEach((el) => {
-      el.textContent = days.toLocaleString();
-    });
-
-    const guiltEl = document.querySelector('#guilt-timer');
-    const arrivedAt = Date.now();
-    setInterval(() => {
-      const s = Math.floor((Date.now() - arrivedAt) / 1000);
-      guiltEl.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-    }, 1000);
-
     const checkoutUrl = stripeCheckoutUrl(STORE.stripePaymentLink);
     const storeReady = Boolean(checkoutUrl);
     const storeNotes = document.querySelectorAll('[data-store-note]');
@@ -1798,14 +2047,14 @@
       if (checkoutUrl) {
         link.href = checkoutUrl;
         link.target = '_blank';
-        link.rel = 'noopener';
+        link.rel = 'noopener noreferrer';
         return;
       }
 
       link.addEventListener('click', (event) => {
         event.preventDefault();
         storeNotes.forEach((note) => {
-          note.textContent = 'Stripe checkout is not connected yet. Paste your live buy.stripe.com link into STORE.stripePaymentLink.';
+          note.textContent = 'The optional tip jar is unavailable right now. The Kloppy download is still free.';
         });
         document.querySelector('#pricing')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
@@ -1813,44 +2062,44 @@
 
     storeNotes.forEach((note) => {
       note.textContent = storeReady
-        ? 'The app download is free — grab it from the Download section any time. Your $4.20 here is a voluntary tip toward MVP polish and the V1 launch.'
-        : 'Stripe checkout is not connected yet. Paste your live buy.stripe.com link into STORE.stripePaymentLink.';
+        ? 'Kloppy is free to download. This $4.20 is a voluntary one-time tip for future improvements and unlocks nothing.'
+        : 'The optional tip jar is unavailable right now. The Kloppy download is still free.';
     });
 
     // ---------- downloads ----------
-    // Once DOWNLOADS is filled in, each card becomes a real download button
-    // plus a verifiable checksum. Platform detection below is local only —
-    // nothing about the visitor ever leaves the page.
+    // Platform detection is local only — nothing about the visitor leaves the
+    // page. Mobile operating systems are deliberately not treated as desktop
+    // platforms because no mobile artifacts exist.
     function detectPlatform() {
       const hint = `${navigator.userAgent || ''} ${navigator.platform || ''}`.toLowerCase();
       if (hint.includes('win')) return 'windows';
-      if (hint.includes('mac') || hint.includes('iphone') || hint.includes('ipad')) return 'macos';
-      if (hint.includes('linux') || hint.includes('android')) return 'linuxAppImage';
+      if (hint.includes('mac') && !hint.includes('iphone') && !hint.includes('ipad')) return 'macos';
+      if (hint.includes('linux') && !hint.includes('android')) return 'linux';
       return '';
     }
 
     const downloadSection = document.querySelector('#download');
     if (downloadSection) {
-      downloadSection.querySelectorAll('.download-card').forEach((card) => {
-        const info = DOWNLOADS.platforms[card.dataset.platform];
-        if (!info) return;
+      downloadSection.querySelectorAll('[data-dl-version]').forEach((versionEl) => {
+        versionEl.textContent = RELEASE.version || 'unavailable';
+      });
 
-        const versionEl = card.querySelector('[data-dl-version]');
-        if (versionEl) versionEl.textContent = DOWNLOADS.version;
-        const typeEl = card.querySelector('[data-dl-filetype]');
-        if (typeEl) typeEl.textContent = info.fileType;
+      downloadSection.querySelectorAll('[data-dl-action]').forEach((action) => {
+        const info = RELEASE.assets[action.dataset.dlAction];
+        const card = action.closest('.download-card');
+        const url = info && githubReleaseAssetUrl(RELEASE.url, info.artifact);
+        if (!info || info.platform !== card?.dataset.platform || !url) {
+          action.innerHTML = '<span class="button buy download-get" aria-disabled="true">Unavailable</span>';
+          return;
+        }
 
-        if (!info.url) return; // no artifact yet — keep the "still in the box" note
-
-        const action = card.querySelector('[data-dl-action]');
-        if (!action) return;
         action.textContent = '';
 
         const link = document.createElement('a');
         link.className = 'button buy download-get';
-        link.href = info.url;
-        link.rel = 'noopener';
-        link.textContent = `Download for ${info.label}`;
+        link.href = url;
+        link.rel = 'noopener noreferrer';
+        link.textContent = info.label;
         action.appendChild(link);
 
         if (info.sha256) {
@@ -1895,31 +2144,6 @@
         likelyCard.querySelector('.download-body')?.prepend(badge);
       }
     }
-
-    document.querySelector('#signup-form').addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const form = event.currentTarget;
-      const note = document.querySelector('#signup-note');
-
-      if (!STORE.newsletter) {
-        note.textContent = 'The list opens with the store. He wrote your intention down in the good notebook.';
-        return;
-      }
-
-      note.textContent = 'Delivering your goodbye...';
-      try {
-        const response = await fetch(STORE.newsletter, {
-          method: 'POST',
-          headers: { Accept: 'application/json' },
-          body: new FormData(form)
-        });
-        if (!response.ok) throw new Error('bad response');
-        note.textContent = 'He read your email address out loud. Twice. Softly.';
-        form.reset();
-      } catch {
-        note.textContent = "It didn't go through. He's telling himself it's the wifi.";
-      }
-    });
 
     const clock = document.querySelector('#clock');
     const tick = () => {

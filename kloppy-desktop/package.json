@@ -12,6 +12,7 @@
   "scripts": {
     "start": "env -u ELECTRON_RUN_AS_NODE electron .",
     "icon:generate": "node scripts/generate-icon.js",
+    "build": "npm run build:unpacked",
     "build:unpacked": "electron-builder --config electron-builder.config.js --dir",
     "dist:linux": "electron-builder --config electron-builder.config.js --linux",
     "dist:mac": "CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --config electron-builder.config.js --mac",
